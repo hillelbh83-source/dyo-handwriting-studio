@@ -1,8 +1,22 @@
-# דיו — הפעלה מקומית
+# Welcome to Dyo / ברוכים הבאים לדיו
 
-הרץ `npm run dev` ופתח http://localhost:5173.
-אין צורך בהתקנת תלויות או בשרת ענן. כל הקוד והספריות נטענים מהמחשב.
-האותיות, המסמך וההגדרות נשמרים בדפדפן באותה כתובת. מומלץ להוריד גיבוי JSON מדי פעם.
+Choose your complete guide / בחרו את המדריך המלא:
 
+- [English — setup, drawing, documents, PDF, fonts, and backups](README.md)
+- [עברית — הפעלה, ציור, מסמכים, PDF, פונטים וגיבויים](README.he.md)
 
-לפתיחה בטלפון באותה רשת Wi-Fi, השתמש בכתובת ה-IP המקומית של המחשב ובפורט של האתר. ההפעלה מאזינה לרשת המקומית; אפשר להגביל למחשב בלבד עם HOST=127.0.0.1.
+Run in this folder / הריצו בתיקייה הזו:
+
+```sh
+npm run dev
+```
+
+Open / פתחו: **http://localhost:5173**
+
+Requires Node.js 22.13 or newer. No dependency installation is needed for the local studio.
+
+נדרשת Node.js בגרסה 22.13 ומעלה. אין צורך להתקין תלויות להפעלת הסטודיו המקומי.
+
+Keep both a letter-library JSON backup and a Markdown copy of your document.
+
+שמרו גם גיבוי JSON של ספריית האותיות וגם עותק Markdown של המסמך.

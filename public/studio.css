@@ -282,3 +282,24 @@ button,a,input,select,textarea{touch-action:manipulation}
  background-size:var(--notebook-grid-size) var(--notebook-grid-size);
  background-position:0 var(--notebook-grid-offset-y);
 }
+
+/* Help stays available without interrupting the workspace. */
+.user-guide-link{color:var(--ink);font-size:12px;text-decoration:none;padding:10px 12px;border:1px solid var(--line);border-radius:8px;white-space:nowrap;background:#fcfbf780}
+.user-guide-link:hover{background:#e8eee8}
+.getting-started{margin:0 0 24px;border:1px solid #cfdcc3;border-radius:14px;background:#edf3e5;padding:16px 20px}
+.getting-started summary{cursor:pointer;font-weight:600;font-size:14px;line-height:1.7}
+.getting-started summary>span{font-size:11px;color:#53665e;font-weight:400;margin-inline-start:10px}
+.getting-started[open] summary>span{display:none}
+.start-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:18px}
+.start-steps>a{padding:16px;background:#fffef9;border:1px solid #d8e1d0;border-radius:10px;text-decoration:none;color:var(--ink)}
+.start-steps>a:hover{border-color:#8aa47a}
+.start-steps b{display:block;font-size:14px;margin-bottom:8px}
+.start-steps span{display:block;font-size:13px;line-height:1.7;color:#53665e}
+.getting-started p{font-size:12px;margin-bottom:0}
+.getting-started p a,.workflow-note a{color:var(--green);text-underline-offset:3px}
+.workflow-note{font-size:12px;line-height:1.8;color:#53665e;margin:12px 0}
+.document-input-label{display:block;margin:18px 0 8px;font-size:13px;font-weight:600}
+.document-input-label span{display:block;font-size:11px;font-weight:400;color:#53665e;margin-top:4px}
+.user-guide-link:focus-visible,.getting-started a:focus-visible,.workflow-note a:focus-visible,.getting-started summary:focus-visible{outline:3px solid #b36f31;outline-offset:4px}
+@media(max-width:900px){.headtools{flex-wrap:wrap;justify-content:flex-end}.user-guide-link{font-size:11px;padding:8px}.start-steps{grid-template-columns:1fr}.getting-started{padding:14px 16px}.getting-started summary>span{display:block;margin-inline-start:0}}
+@media print{.getting-started,.workflow-note,.document-input-label{display:none!important}}

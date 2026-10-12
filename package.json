@@ -11,7 +11,8 @@
     "build": "node scripts/run-framework.mjs build",
     "start": "node scripts/local-server.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
-    "db:generate": "drizzle-kit generate"
+    "db:generate": "drizzle-kit generate",
+    "docs:build": "node scripts/build-guide.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

@@ -15,7 +15,7 @@
     restore:'M3 10a9 9 0 1 1 2 8M3 4v6h6M12 7v5l3 2',
     external:'M14 3h7v7m0-7L10 14M10 3H3v18h18v-7'
   };
-  const icons={chooseDocument:'upload',toggleTextStyle:'pen',backup:'download',import:'upload',nextMissing:'next',undo:'undo',clear:'erase',saveGlyph:'plus',addCharacter:'plus',smart:'pen',shuffle:'sync',fontExport:'download',print:'print',renderDoc:'sync',loadDemo:'doc',openStudio:'external',resetMetrics:'restore'};
+  const icons={saveDocumentText:'download',chooseDocument:'upload',toggleTextStyle:'pen',backup:'download',import:'upload',nextMissing:'next',undo:'undo',clear:'erase',saveGlyph:'plus',addCharacter:'plus',smart:'pen',shuffle:'sync',fontExport:'download',print:'print',renderDoc:'sync',loadDemo:'doc',openStudio:'external',resetMetrics:'restore'};
   function decorate(el,name){if(!el)return;el.dataset.icon=name;const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="${paths[name]}"/></svg>`;el.style.setProperty('--icon',`url("data:image/svg+xml,${encodeURIComponent(svg)}")`);}
   for(const [id,name] of Object.entries(icons))decorate(document.getElementById(id),name);
   document.querySelectorAll('#tabs button').forEach((el,i)=>decorate(el,['pen','doc','download'][i]));

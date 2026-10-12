@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="The complete Dyo guide: setup, drawing, handwritten documents, fonts, and backups."><title>A guide to your handwriting — Dyo</title><link rel="stylesheet" href="guide.css"></head>
+<body><a class="skip" href="#content">Skip to guide</a>
+<header><a class="logo" href="./"><b>Dyo</b><span>The user guide</span></a><div class="header-actions"><nav aria-label="Guide language"><a href="guide.html" lang="en" aria-current="page">English</a><a href="guide.he.html" lang="he" >עברית</a></nav><a class="studio-link" href="./">Open the studio ↗</a></div></header>
+<div class="guide-layout"><aside><details open><summary>Contents</summary><nav aria-label="Guide chapters"><a href="#start">1. Your first document</a><a href="#setup">2. Download and run</a><a href="#tour">3. Find your way around</a><a href="#draw">4. Draw letters and variants</a><a href="#document">5. Write and format a document</a><a href="#math">6. Mathematics and LaTeX</a><a href="#export">7. Export PDF or font</a><a href="#backup">8. Save, back up, and restore</a><a href="#mobile">9. Use a phone or tablet</a><a href="#troubleshooting">10. Troubleshooting</a><a href="#development">11. For developers</a><a href="#credits">12. Libraries and credits</a></nav></details><p>At your own pace. Start small and return to any chapter when you need it.</p></aside>
+<main id="content" tabindex="-1"><div class="guide-eyebrow">DRAW · WRITE · KEEP</div><article><h1>Dyo Handwriting Studio</h1>
+<p><strong>Your handwriting, from the first letter to a finished document.</strong> Draw letters, give each one a few natural variations, and turn Hebrew, English, and mathematical text into handwritten PDFs. You can also export an installable font.</p>
+<p><strong>Choose your guide:</strong> <a href="guide.html">English</a> · <a href="guide.he.html">עברית — המדריך המלא</a></p>
+<p>The studio interface is in Hebrew. This English guide includes the Hebrew button labels so you can find your way around. Once the studio is running, a readable guide is available at <a href="http://localhost:5173/guide.html">localhost:5173/guide.html</a>, with a language switch and chapter navigation.</p>
+<h2 id="start">1. Your first document</h2>
+<p>You do not need to draw an entire alphabet to get started.</p>
+<ol>
+<li><a href="#setup">Run the studio</a> and open <strong>http://localhost:5173</strong>.</li>
+<li>In <strong>מעבדת אותיות</strong> (Letter lab), select a letter from the library and draw it on the lined canvas.</li>
+<li>Click <strong>שמירת גרסה +</strong> (Save variant). Draw a second version and save it too.</li>
+<li>Open <strong>מסמך</strong> (Document) and type a short word containing that letter. Draw the remaining letters in your word to make it fully handwritten.</li>
+<li>Adjust <strong>גודל ועובי טקסט</strong> (Text size and ink weight), then click <strong>הורדת PDF</strong> (Download PDF).</li>
+<li>Click <strong>גיבוי אותיות</strong> (Back up letters) and <strong>שמירת טקסט</strong> (Save text) to keep editable copies as well.</li>
+</ol>
+<p><strong>Try before drawing:</strong> download the <a href="downloads/dyo-expanded-backup.json" download="">sample handwriting JSON</a> and load it with <strong>טעינת גיבוי</strong> (Load backup). You can download the <a href="downloads/my-dyo-handwriting-expanded.ttf" download="">sample TTF</a> separately to try an installed font. These are sample assets; they are not your own handwriting. Importing a backup replaces your current letter library, so export your own backup first.</p>
+<p><a id="setup"></a></p>
+<h2 id="setup">2. Download and run</h2>
+<h3>What you need</h3>
+<p>A computer with <strong>Node.js 22.13 or newer</strong>, a modern browser, and this repository. No account, API key, cloud service, or framework dependency installation is required for the local studio. Internet access is needed to download the project and Node.js; the studio then uses bundled local libraries.</p>
+<h3>Option A — download a ZIP</h3>
+<ol>
+<li>On the <a href="https://github.com/hillelbh83-source/dyo-handwriting-studio">GitHub repository</a>, choose <strong>Code → Download ZIP</strong>.</li>
+<li>Extract the ZIP into a normal folder. Do not run it from inside the archive.</li>
+<li>Open a terminal in the extracted folder, where <code>package.json</code> is located. On Windows this can be PowerShell; on macOS or Linux use Terminal.</li>
+<li>Run:</li>
+</ol>
+<pre><code class="language-sh">npm run dev
+</code></pre>
+<ol start="5">
+<li>Keep that terminal open and visit <strong>http://localhost:5173</strong> in your browser. To stop the server, press <strong>Ctrl+C</strong> in the terminal.</li>
+</ol>
+<h3>Option B — use Git</h3>
+<pre><code class="language-sh">git clone https://github.com/hillelbh83-source/dyo-handwriting-studio.git
+cd dyo-handwriting-studio
+npm run dev
+</code></pre>
+<h3>Useful server settings</h3>
+<p>By default, the server listens on your local network. To restrict access to this computer on macOS/Linux:</p>
+<pre><code class="language-sh">HOST=127.0.0.1 npm run dev
+</code></pre>
+<p>In Windows PowerShell:</p>
+<pre><code class="language-powershell">$env:HOST=&quot;127.0.0.1&quot;
+npm run dev
+</code></pre>
+<p>If port 5173 is occupied, use <code>PORT=5174 npm run dev</code> on macOS/Linux, or set <code>$env:PORT=&quot;5174&quot;</code> before <code>npm run dev</code> in PowerShell. Open the matching port in the browser. <strong>Changing the address or port opens separate browser storage</strong>; export a backup and your text before moving.</p>
+<p><a id="tour"></a></p>
+<h2 id="tour">3. Find your way around</h2>
+<table>
+<thead>
+<tr>
+<th>Area / Hebrew label</th>
+<th>What you do here</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Letter lab / מעבדת אותיות</td>
+<td>Choose characters, draw them, save variants, and adjust their size or baseline.</td>
+</tr>
+<tr>
+<td>Document / מסמך</td>
+<td>Type or load text, format it, preview handwriting, and download a PDF.</td>
+</tr>
+<tr>
+<td>Font / פונט</td>
+<td>Name and download an installable TrueType font.</td>
+</tr>
+<tr>
+<td>Back up letters / גיבוי אותיות</td>
+<td>Download the letter library and per-character adjustments as JSON.</td>
+</tr>
+<tr>
+<td>Load backup / טעינת גיבוי</td>
+<td>Replace the letter library with a previously exported JSON file.</td>
+</tr>
+<tr>
+<td>User guide / מדריך למשתמש</td>
+<td>Open this guide and choose English or Hebrew.</td>
+</tr>
+</tbody>
+</table>
+<p>The ready-character count shows how many characters have at least one saved variant. You can work with a partial library and add letters as needed.</p>
+<p><a id="draw"></a></p>
+<h2 id="draw">4. Draw letters and variants</h2>
+<h3>Choose and draw</h3>
+<p>Select Hebrew, lowercase English, uppercase English, numbers/punctuation, mathematics, or custom characters. Click the desired character, then draw with a mouse, finger, or stylus.</p>
+<p>The <strong>blue baseline</strong> is where ordinary letters sit. Use the body-height guide for their main shape; descending letters can extend below the baseline. <strong>התאמת גובה אוטומטית</strong> (Automatic height adjustment) adapts the saved shape to the character type while retaining its proportions. Turn it off if you prefer your original positioning.</p>
+<ul>
+<li><strong>ביטול קו</strong> (Undo stroke) removes the latest stroke on the canvas.</li>
+<li><strong>ניקוי</strong> (Clear) clears the current canvas; saved variants remain in the library.</li>
+<li><strong>עובי עט</strong> (Pen width) controls the drawing pen.</li>
+<li><strong>שמירת גרסה +</strong> (Save variant) adds your drawing to the selected character.</li>
+<li><strong>התו הבא שחסר</strong> (Next missing character) finds an undrawn character in the selected group.</li>
+</ul>
+<p><strong>Save before selecting another character.</strong> Switching characters clears the current canvas. A drawing becomes a library variant only when you save it.</p>
+<h3>Make it feel natural</h3>
+<p>Start with one variant per needed character. Add 3–5 variants when you want more natural variation. Small differences are useful: each occurrence in the studio can choose a different saved variant. The document's <strong>אופי כתב היד</strong> (Handwriting character) slider controls natural movement; preview regeneration may choose new variants.</p>
+<p>Click a saved variant to edit it, then use <strong>עדכון גרסה</strong> (Update variant) to replace that version. To create an additional version instead, clear the canvas and draw again. The <strong>×</strong> control deletes that saved variant. Large libraries have previous/next variant-page controls.</p>
+<h3>Adjust or add characters</h3>
+<p>Use <strong>גודל</strong> (Size) and <strong>גובה בשורה</strong> (Baseline position) to adjust all variants of the selected character. <strong>איפוס הכוונון לתו הזה</strong> resets only those adjustments. Original drawings remain available.</p>
+<p>Enter one character in <strong>תו נוסף</strong> (Extra character), then click <strong>הוספה</strong> (Add). For personal fraction lines, use <strong>ציור קו שבר</strong> (Draw fraction bar), draw a horizontal stroke, and save one or more variants.</p>
+<p><a id="document"></a></p>
+<h2 id="document">5. Write and format a document</h2>
+<p>In <strong>מסמך</strong>, paste or type into the text box, or choose <strong>טעינת מסמך</strong> (Load document) for a <code>.txt</code> or <code>.md</code> file. Uploaded text files must be no larger than 1 MB. Loading a file replaces the text in the editor, so save your current text first.</p>
+<p>The preview updates as you type. <strong>רענון תצוגה</strong> (Refresh preview) rebuilds it manually. <strong>מסמך לדוגמה — כל התווים</strong> (Sample document — all characters) is useful for spotting gaps in your library; it asks before replacing existing non-demo text.</p>
+<p>Plain text works immediately. <strong>Markdown</strong> is plain text with simple formatting marks:</p>
+<pre><code class="language-markdown"># My notebook
+## A smaller heading
+This is **bold** and this is *emphasized*.
+
+- First item
+- Second item
+
+1. First step
+2. Second step
+
+| Topic | Notes |
+| --- | --- |
+| Practice | A little every day |
+</code></pre>
+<p>Hebrew, English, and mixed-direction paragraphs are supported. Open <strong>גודל ועובי טקסט</strong> to adjust text size, ink weight, word spacing, and natural movement. Watch the preview while you adjust; those choices also affect PDF output. Missing letter drawings can appear as regular text rather than your handwriting: draw them in the letter lab.</p>
+<p>Use <strong>שמירת טקסט</strong> to download the editable source as <code>.md</code>. This retains the text and Markdown/LaTeX syntax. A PDF is the finished visual document; it cannot be loaded back into this text editor.</p>
+<p><a id="math"></a></p>
+<h2 id="math">6. Mathematics and LaTeX</h2>
+<p>Write a short formula between single dollar signs; put a formula on its own line between double dollar signs:</p>
+<pre><code class="language-latex">Inline: $x^2 + y^2 = z^2$
+
+$$
+\frac{1}{2} + \sqrt{x} = \int_0^1 t^2\,dt
+$$
+</code></pre>
+<p>Fractions, powers, indices, integrals, limits, matrices, and scalable brackets use bundled KaTeX layout with your saved handwriting where available. Draw the letters, digits, and symbols used in your formula in <strong>סימנים מתמטיים</strong> (Math symbols) and the other character groups. Some mathematical characters have equivalent-letter aliases. Missing drawings can retain standard formula characters.</p>
+<p>A custom saved fraction-bar variant is stretched to match the fraction width. A TTF font alone does not arrange equations; use the studio's document editor and PDF export for mathematical layouts.</p>
+<p><a id="export"></a></p>
+<h2 id="export">7. Export PDF or font</h2>
+<h3>A finished document — PDF</h3>
+<ol>
+<li>Open <strong>מסמך</strong> and check the preview.</li>
+<li>Set your text size and ink weight.</li>
+<li>Click <strong>הורדת PDF</strong> and let the export finish.</li>
+<li>Open the downloaded file to check its pages before sharing or printing it.</li>
+</ol>
+<p>PDF export uses the current preview's handwritten shapes and layout. Long documents can take longer and are split into pages; check wide formulas and tables in the resulting file. You do not need to install a font to view the PDF.</p>
+<h3>Your handwriting in other apps — TTF</h3>
+<ol>
+<li>Open <strong>פונט</strong> (Font).</li>
+<li>Enter a name in <strong>שם הפונט</strong> (Font name).</li>
+<li>Click <strong>הורדת פונט TTF</strong> (Download TTF font).</li>
+<li>If a save dialog opens, choose a destination. Otherwise the browser downloads it; a <strong>הורדת הקובץ המוכן</strong> (Download ready file) link is also available.</li>
+<li>Open the <code>.ttf</code> file with your operating system's font installer and install it. Reopen your writing app and select the font name you chose.</li>
+</ol>
+<p>The first variant is the default character. Additional variants are included as stylistic alternates (<code>salt</code>), but external applications differ in their font-feature support. Automatic random mixing is available in the studio; do not assume Word or another app will mix variants automatically. Undrawn characters are not added to the font and may use another font in external apps.</p>
+<p><a id="backup"></a></p>
+<h2 id="backup">8. Save, back up, and restore</h2>
+<p><strong>Your work is stored in this browser, at this exact address.</strong> The letter library uses IndexedDB; text and settings use browser storage. No sign-in or automatic device sync is provided. Browser-data cleanup, private browsing, a different browser, or a changed address can make previous work unavailable.</p>
+<table>
+<thead>
+<tr>
+<th>Keep this</th>
+<th>How</th>
+<th>What it contains</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Editable handwriting</td>
+<td><strong>גיבוי אותיות</strong> → <code>.json</code></td>
+<td>Saved character variants and per-character size/baseline adjustments.</td>
+</tr>
+<tr>
+<td>Editable document</td>
+<td><strong>שמירת טקסט</strong> → <code>.md</code></td>
+<td>Current text, Markdown formatting, and LaTeX source.</td>
+</tr>
+<tr>
+<td>Finished document</td>
+<td><strong>הורדת PDF</strong> → <code>.pdf</code></td>
+<td>Exported pages for viewing, printing, and sharing.</td>
+</tr>
+<tr>
+<td>Installable font</td>
+<td><strong>הורדת פונט TTF</strong> → <code>.ttf</code></td>
+<td>Exported glyphs and alternates for compatible applications.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>The JSON backup does not include document text or all display settings.</strong> Keep both JSON and Markdown copies. A TTF file is not an editable studio backup, and TTF import is not supported.</p>
+<p>To restore: open the intended browser/address, choose <strong>טעינת גיבוי</strong>, and select your JSON. Import replaces the existing letter library after confirmation; it does not merge libraries. Export the current library before importing another. Then load your saved <code>.md</code> in the Document tab and recheck display settings. JSON imports must be no larger than 20 MB and must use the studio's backup format.</p>
+<p>Wait until the header says <strong>נשמר במכשיר שלך</strong> (Saved on your device) before closing. If it reports a save failure, download a JSON backup immediately and save your text too.</p>
+<p><a id="mobile"></a></p>
+<h2 id="mobile">9. Use a phone or tablet</h2>
+<ol>
+<li>Run the server on your computer with its default network settings. Keep the computer awake and the terminal open.</li>
+<li>Connect both devices to the same trusted Wi-Fi network.</li>
+<li>Find the computer's local network IP in its network settings, for example <code>192.168.1.20</code>.</li>
+<li>Open <code>http://192.168.1.20:5173</code> on the phone, replacing the example with your computer's address.</li>
+<li>Draw with a finger or stylus. Scroll outside the canvas; touches inside it are reserved for drawing. The bottom tabs switch between lab, document, and font.</li>
+</ol>
+<p>On the phone, <code>localhost</code> refers to the phone itself. Use the computer's IP address. If the page cannot open, check that the server is running, that it is not limited to <code>127.0.0.1</code>, and that your firewall permits this local connection.</p>
+<p>The phone has its own browser data. To move work, export JSON and Markdown on the original device, transfer the files yourself, and import them on the phone. There is no automatic synchronization.</p>
+<p><a id="troubleshooting"></a></p>
+<h2 id="troubleshooting">10. Troubleshooting</h2>
+<table>
+<thead>
+<tr>
+<th>Problem</th>
+<th>What to do</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>node</code> or <code>npm</code> is not recognized</td>
+<td>Install the required Node.js version, then reopen your terminal.</td>
+</tr>
+<tr>
+<td><code>package.json</code> cannot be found</td>
+<td>Open the terminal in the extracted repository folder, not its parent folder.</td>
+</tr>
+<tr>
+<td><code>EADDRINUSE</code> / port already in use</td>
+<td>Stop the other server or choose a different port as explained in <a href="#setup">setup</a>. Remember that storage is separate for each port.</td>
+</tr>
+<tr>
+<td>I cannot find my letters</td>
+<td>Return to the same browser and exact address you used before. If browser data was removed, restore your JSON backup.</td>
+</tr>
+<tr>
+<td>Some text is not handwritten</td>
+<td>Draw those characters; check English case, punctuation, and mathematical symbols too.</td>
+</tr>
+<tr>
+<td>A character is too high or too large</td>
+<td>Select it in the lab and adjust its size/baseline; review automatic height adjustment when drawing.</td>
+</tr>
+<tr>
+<td>My unsaved drawing disappeared</td>
+<td>Save a variant before changing character. Canvas strokes are not saved as library letters automatically.</td>
+</tr>
+<tr>
+<td>The formula shows an error</td>
+<td>Check dollar-sign pairs, braces, and LaTeX commands. Try the small example in the math chapter.</td>
+</tr>
+<tr>
+<td>Preview or export takes time</td>
+<td>Try a shorter document, wait for the preview to finish, and avoid repeated export clicks. Save your JSON and text before reloading.</td>
+</tr>
+<tr>
+<td>No file appears after export</td>
+<td>Check your browser's downloads or save dialog. For fonts, use the ready-file link.</td>
+</tr>
+<tr>
+<td>Backup is rejected</td>
+<td>Select a studio JSON backup, not a TTF/PDF. Check the 20 MB limit. Save your existing library before trying another file.</td>
+</tr>
+<tr>
+<td>Saving failed</td>
+<td>Export JSON and text immediately; check available device storage and browser storage permissions.</td>
+</tr>
+</tbody>
+</table>
+<p>When reporting a problem in <a href="https://github.com/hillelbh83-source/dyo-handwriting-studio/issues">GitHub Issues</a>, include your browser, operating system, what you did, and what happened. Use a small non-private example or screenshot rather than uploading your personal documents.</p>
+<p><a id="development"></a></p>
+<h2 id="development">11. For developers</h2>
+<table>
+<thead>
+<tr>
+<th>Location</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>public/index.html</code>, <code>public/style.css</code>, <code>public/studio.css</code></td>
+<td>Local studio markup and presentation.</td>
+</tr>
+<tr>
+<td><code>public/app.js</code>, <code>public/local.js</code></td>
+<td>Drawing, document interaction, font export, and local preferences.</td>
+</tr>
+<tr>
+<td><code>public/storage.js</code>, <code>public/storage-worker.js</code></td>
+<td>Browser letter-library persistence.</td>
+</tr>
+<tr>
+<td><code>public/document-markdown*.js</code>, <code>public/document-pdf.js</code></td>
+<td>Markdown/LaTeX rendering and PDF output.</td>
+</tr>
+<tr>
+<td><code>public/font.js</code></td>
+<td>Font generation.</td>
+</tr>
+<tr>
+<td><code>scripts/local-server.mjs</code></td>
+<td>Static local server and development reload.</td>
+</tr>
+<tr>
+<td><code>README.md</code>, <code>README.he.md</code></td>
+<td>English and Hebrew guide sources.</td>
+</tr>
+<tr>
+<td><code>scripts/build-guide.mjs</code></td>
+<td>Generate the two offline HTML guides from the READMEs.</td>
+</tr>
+<tr>
+<td><code>public/downloads/</code></td>
+<td>Included sample handwriting assets.</td>
+</tr>
+</tbody>
+</table>
+<p>Run <code>npm run dev</code> or <code>npm start</code> for the local studio. Regenerate the website guides after documentation edits with:</p>
+<pre><code class="language-sh">npm run docs:build
+</code></pre>
+<p>The repository also retains a React/Vite/Cloudflare scaffold. Its framework build and lint scripts concern that scaffold; they are not required to use the local studio. If working on the scaffold, install the pinned dependencies with <code>pnpm install --frozen-lockfile</code> (pnpm 11.25.0). Preserve browser data and handwritten variants when changing storage or rendering.</p>
+<p><a id="credits"></a></p>
+<h2 id="credits">12. Libraries and credits</h2>
+<p>Bundled libraries include KaTeX for mathematical layout, markdown-it for Markdown, and jsPDF with svg2pdf.js for PDF output. Third-party license files are included under <code>public/vendor/</code> and <code>vendor/</code>.</p>
+<p>Drawings and documents created in your browser are not automatically uploaded to GitHub. Files already included in <code>public/downloads/</code> are repository samples. Keep personal exports outside the repository if you do not intend to publish them.</p>
+</article><a class="back-top" href="#">Back to top ↑</a></main></div>
+<footer>Your letters. Your documents. Kept locally.</footer>
+<script>document.querySelectorAll('.header-actions nav a').forEach(a=>a.addEventListener('click',()=>{a.hash=location.hash}));</script></body></html>
