@@ -1,0 +1,4 @@
+import {sqliteTable,text,integer,primaryKey} from 'drizzle-orm/sqlite-core';
+export const glyphVersions=sqliteTable('glyph_versions',{owner:text('owner').notNull(),id:text('id').notNull(),character:text('character').notNull(),payload:text('payload').notNull(),active:integer('active').notNull().default(1),createdAt:text('created_at').notNull()},t=>[primaryKey({columns:[t.owner,t.id]})]);
+export const progressMeta=sqliteTable('progress_meta',{owner:text('owner').primaryKey(),revision:integer('revision').notNull().default(0),payload:text('payload').notNull().default('{}'),updatedAt:text('updated_at').notNull()});
+export const progressHistory=sqliteTable('progress_history',{owner:text('owner').notNull(),revision:integer('revision').notNull(),payload:text('payload').notNull(),createdAt:text('created_at').notNull()},t=>[primaryKey({columns:[t.owner,t.revision]})]);
