@@ -23,7 +23,7 @@ function restoreLiveDraft(){
   try{
    const focused=document.activeElement,fields={};for(const id of ['md','fontName','customCharacter','pen','jitter'])fields[id]=$(id).value;
    sessionStorage.setItem('dyo-live-draft',JSON.stringify({char,group:$('group').value,strokes,editIndex,fields,normalize:$('normalize').checked,tab:document.querySelector('#tabs .active').dataset.tab,styleOpen:!$('textStylePanel').hidden,scrollX:window.scrollX,scrollY:window.scrollY,focus:focused.id,selection:typeof focused.selectionStart==='number'?[focused.selectionStart,focused.selectionEnd]:null}));
-   localStorage.setItem('dyo-document-v1',$('md').value);window.dyoChanged('preview');window.dyoChanged('fontName');
+   await saveDocumentSource($('md').value);window.dyoChanged('preview');window.dyoChanged('fontName');
    await dyoSaveLibrary(data);location.reload();
   }catch{reloading=false;toast('העדכון ממתין: לא ניתן לשמור את העריכה. הורד גיבוי לפני רענון.')}
  };

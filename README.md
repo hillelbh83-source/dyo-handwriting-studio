@@ -128,11 +128,23 @@ Enter one character in **תו נוסף** (Extra character), then click **הוס�
 <a id="document"></a>
 ## 5. Write and format a document
 
-In **מסמך**, paste or type into the text box, or choose **טעינת מסמך** (Load document) for a `.txt` or `.md` file. Uploaded text files must be no larger than 1 MB. Loading a file replaces the text in the editor, so save your current text first.
+In **מסמך**, paste or type into the text box, or choose **טעינת מסמך** (Load document) for a `.docx`, `.txt`, or `.md` file. Word files can be up to 25 MB; text/Markdown files up to 35 MB. Loading a file replaces the text in the editor, so save your current text first.
 
 The preview updates as you type. **רענון תצוגה** (Refresh preview) rebuilds it manually. **מסמך לדוגמה — כל התווים** (Sample document — all characters) is useful for spotting gaps in your library; it asks before replacing existing non-demo text.
 
 <a id="ai-to-pdf"></a>
+### Import a Word document (DOCX)
+
+Click **טעינת מסמך** (Load document), choose a `.docx` file, check the converted preview, and click **הורדת PDF** (Download PDF). Conversion happens locally in your browser; the Word file is not uploaded to a conversion service.
+
+The importer handles Hebrew and English paragraphs, headings, bold/italic text, lists, tables with merged cells, embedded PNG/JPEG/GIF/WebP/BMP images, page breaks, and native Word equations (OMML). Equations become editable LaTeX: fractions, powers, indices, roots, integrals with limits, functions, delimiters, matrices, and aligned equations use the studio’s math layout and handwriting. Characters you have not drawn retain readable standard glyphs.
+
+The text editor contains editable Markdown/LaTeX and short image references. Image data is kept with the document in IndexedDB. **שמירת טקסט** downloads a portable `.md` containing the embedded pictures, so loading that file in Dyo restores them too. Imported merged tables and alignment use Dyo-specific `:::dyo-…` blocks; keep those blocks intact when editing.
+
+**Limits:** DOCX files up to 25 MB, text/Markdown up to 35 MB, and a bounded expanded archive up to 80 MB. The result uses Dyo’s notebook layout; Word’s exact pagination, fonts, columns, floating-object positions, headers/footers, and advanced typography are not reproduced. Old `.doc` files, encrypted documents, editable charts/SmartArt, embedded applications, and linked external images are not supported. Convert such objects to embedded PNG/JPEG images in Word first. Warnings for detected unsupported content appear below the file name; review them before exporting.
+
+Loading another document asks before replacing your current text. If conversion or storage fails, the current document stays in the editor. Keep the original Word file and a portable Markdown copy alongside your PDF.
+
 ### Turn an AI answer into a PDF
 
 To turn a summary, explanation, lesson, or other AI-generated text into a handwritten document, ask the AI to write in **Markdown (MD)**. Then copy the source directly into Dyo. You do not need to create or upload a `.md` file first.
@@ -222,12 +234,12 @@ The first variant is the default character. Additional variants are included as 
 <a id="backup"></a>
 ## 8. Save, back up, and restore
 
-**Your work is stored in this browser, at this exact address.** The letter library uses IndexedDB; text and settings use browser storage. No sign-in or automatic device sync is provided. Browser-data cleanup, private browsing, a different browser, or a changed address can make previous work unavailable.
+**Your work is stored in this browser, at this exact address.** The letter library uses IndexedDB; documents and their embedded images use IndexedDB too; other settings use browser storage. No sign-in or automatic device sync is provided. Browser-data cleanup, private browsing, a different browser, or a changed address can make previous work unavailable.
 
 | Keep this | How | What it contains |
 | --- | --- | --- |
 | Editable handwriting | **גיבוי אותיות** → `.json` | Saved character variants and per-character size/baseline adjustments. |
-| Editable document | **שמירת טקסט** → `.md` | Current text, Markdown formatting, and LaTeX source. |
+| Editable document | **שמירת טקסט** → `.md` | Current text, Markdown formatting, LaTeX source, and embedded document images. |
 | Finished document | **הורדת PDF** → `.pdf` | Exported pages for viewing, printing, and sharing. |
 | Installable font | **הורדת פונט TTF** → `.ttf` | Exported glyphs and alternates for compatible applications. |
 

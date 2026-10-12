@@ -108,9 +108,15 @@ npm run dev
 <p>Enter one character in <strong>תו נוסף</strong> (Extra character), then click <strong>הוספה</strong> (Add). For personal fraction lines, use <strong>ציור קו שבר</strong> (Draw fraction bar), draw a horizontal stroke, and save one or more variants.</p>
 <p><a id="document"></a></p>
 <h2 id="document">5. Write and format a document</h2>
-<p>In <strong>מסמך</strong>, paste or type into the text box, or choose <strong>טעינת מסמך</strong> (Load document) for a <code>.txt</code> or <code>.md</code> file. Uploaded text files must be no larger than 1 MB. Loading a file replaces the text in the editor, so save your current text first.</p>
+<p>In <strong>מסמך</strong>, paste or type into the text box, or choose <strong>טעינת מסמך</strong> (Load document) for a <code>.docx</code>, <code>.txt</code>, or <code>.md</code> file. Word files can be up to 25 MB; text/Markdown files up to 35 MB. Loading a file replaces the text in the editor, so save your current text first.</p>
 <p>The preview updates as you type. <strong>רענון תצוגה</strong> (Refresh preview) rebuilds it manually. <strong>מסמך לדוגמה — כל התווים</strong> (Sample document — all characters) is useful for spotting gaps in your library; it asks before replacing existing non-demo text.</p>
 <p><a id="ai-to-pdf"></a></p>
+<h3>Import a Word document (DOCX)</h3>
+<p>Click <strong>טעינת מסמך</strong> (Load document), choose a <code>.docx</code> file, check the converted preview, and click <strong>הורדת PDF</strong> (Download PDF). Conversion happens locally in your browser; the Word file is not uploaded to a conversion service.</p>
+<p>The importer handles Hebrew and English paragraphs, headings, bold/italic text, lists, tables with merged cells, embedded PNG/JPEG/GIF/WebP/BMP images, page breaks, and native Word equations (OMML). Equations become editable LaTeX: fractions, powers, indices, roots, integrals with limits, functions, delimiters, matrices, and aligned equations use the studio’s math layout and handwriting. Characters you have not drawn retain readable standard glyphs.</p>
+<p>The text editor contains editable Markdown/LaTeX and short image references. Image data is kept with the document in IndexedDB. <strong>שמירת טקסט</strong> downloads a portable <code>.md</code> containing the embedded pictures, so loading that file in Dyo restores them too. Imported merged tables and alignment use Dyo-specific <code>:::dyo-…</code> blocks; keep those blocks intact when editing.</p>
+<p><strong>Limits:</strong> DOCX files up to 25 MB, text/Markdown up to 35 MB, and a bounded expanded archive up to 80 MB. The result uses Dyo’s notebook layout; Word’s exact pagination, fonts, columns, floating-object positions, headers/footers, and advanced typography are not reproduced. Old <code>.doc</code> files, encrypted documents, editable charts/SmartArt, embedded applications, and linked external images are not supported. Convert such objects to embedded PNG/JPEG images in Word first. Warnings for detected unsupported content appear below the file name; review them before exporting.</p>
+<p>Loading another document asks before replacing your current text. If conversion or storage fails, the current document stays in the editor. Keep the original Word file and a portable Markdown copy alongside your PDF.</p>
 <h3>Turn an AI answer into a PDF</h3>
 <p>To turn a summary, explanation, lesson, or other AI-generated text into a handwritten document, ask the AI to write in <strong>Markdown (MD)</strong>. Then copy the source directly into Dyo. You do not need to create or upload a <code>.md</code> file first.</p>
 <ol>
@@ -179,7 +185,7 @@ $$
 <p>The first variant is the default character. Additional variants are included as stylistic alternates (<code>salt</code>), but external applications differ in their font-feature support. Automatic random mixing is available in the studio; do not assume Word or another app will mix variants automatically. Undrawn characters are not added to the font and may use another font in external apps.</p>
 <p><a id="backup"></a></p>
 <h2 id="backup">8. Save, back up, and restore</h2>
-<p><strong>Your work is stored in this browser, at this exact address.</strong> The letter library uses IndexedDB; text and settings use browser storage. No sign-in or automatic device sync is provided. Browser-data cleanup, private browsing, a different browser, or a changed address can make previous work unavailable.</p>
+<p><strong>Your work is stored in this browser, at this exact address.</strong> The letter library uses IndexedDB; documents and their embedded images use IndexedDB too; other settings use browser storage. No sign-in or automatic device sync is provided. Browser-data cleanup, private browsing, a different browser, or a changed address can make previous work unavailable.</p>
 <table>
 <thead>
 <tr>
@@ -197,7 +203,7 @@ $$
 <tr>
 <td>Editable document</td>
 <td><strong>שמירת טקסט</strong> → <code>.md</code></td>
-<td>Current text, Markdown formatting, and LaTeX source.</td>
+<td>Current text, Markdown formatting, LaTeX source, and embedded document images.</td>
 </tr>
 <tr>
 <td>Finished document</td>

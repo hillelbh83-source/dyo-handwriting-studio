@@ -181,7 +181,7 @@ window.addEventListener('popstate',()=>openTab(tabFromAddress(),false));
 window.addEventListener('hashchange',()=>openTab(tabFromAddress(),false));
 
 function download(blob,name){let a=document.createElement('a'),u=URL.createObjectURL(blob);a.href=u;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),60000)}
-$('saveDocumentText').onclick=()=>{if(!$('md').value.trim())return toast('כתבו טקסט לפני השמירה');download(new Blob([$('md').value],{type:'text/markdown;charset=utf-8'}),'dyo-document.md');toast('קובץ הטקסט נשלח להורדה')};
+$('saveDocumentText').onclick=()=>{if(!$('md').value.trim())return toast('כתבו טקסט לפני השמירה');download(new Blob([portableDocumentSource($('md').value)],{type:'text/markdown;charset=utf-8'}),'dyo-document.md');toast('קובץ הטקסט נשלח להורדה')};
 $('backup').onclick=()=>download(new Blob([JSON.stringify({...data,metrics})],{type:'application/json'}),'dyo-handwriting-backup.json');$('import').onclick=()=>$('jsonFile').click();
 $('jsonFile').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{if(file.size>20000000)throw Error();let d=JSON.parse(await file.text());if(d.version!==1||!d.glyphs||typeof d.glyphs!=='object')throw Error();for(let [c,gs] of Object.entries(d.glyphs)){if([...c].length!==1||!Array.isArray(gs)||gs.length>1000)throw Error();for(let g of gs){if(!Number.isFinite(g.width)||g.width<=0||g.width>10000||!Array.isArray(g.strokes)||g.strokes.length>500)throw Error();for(let s of g.strokes)if(!Number.isFinite(s.w)||s.w<=0||!Array.isArray(s.points)||s.points.length>100000||s.points.some(p=>p.length!==2||p.some(v=>!Number.isFinite(v)||Math.abs(v)>10000)))throw Error();delete g.raw}}if(Object.keys(data.glyphs).length&&!confirm('הגיבוי יחליף את ספריית האותיות הנוכחית. להמשיך?'))return;data=d;metrics=d.metrics&&typeof d.metrics==='object'?d.metrics:{};for(let [key,m] of Object.entries(metrics)){if(!m||!Number.isFinite(m.scale)||m.scale<60||m.scale>150||!Number.isFinite(m.y)||Math.abs(m.y)>100)delete metrics[key]}try{localStorage.setItem('dyo-metrics-v1',JSON.stringify(metrics))}catch{}persist();window.dyoChanged?.('metrics');window.dyoChanged?.('custom');pick(char);renderDoc();toast('הגיבוי נטען')}catch{toast('הקובץ אינו גיבוי תקין של דיו')}e.target.value=''};
 const latexSymbols={int:'∫',sum:'∑',prod:'∏',sqrt:'√',infty:'∞',partial:'∂',Delta:'∆',nabla:'∇',pm:'±',times:'×',div:'÷',neq:'≠',approx:'≈',leq:'≤',geq:'≥',in:'∈',notin:'∉',cup:'∪',cap:'∩',subset:'⊂',subseteq:'⊆',to:'→',rightarrow:'→',leftrightarrow:'↔',forall:'∀',exists:'∃',alpha:'α',beta:'β',gamma:'γ',delta:'δ',epsilon:'ε',theta:'θ',lambda:'λ',mu:'μ',pi:'π',sigma:'σ',phi:'φ',omega:'ω'};
@@ -232,7 +232,7 @@ function renderDoc(options={}){
  });
  out._handwritingReadyPromise=promise;return promise;
 }
-$('mdFile').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{if(file.size>1000000){toast('בחר מסמך קטן מ־1MB');return}const text=await file.text();$('md').value=text;$('documentFileName').replaceChildren();const name=document.createElement('bdi');name.textContent=file.name;$('documentFileName').append('נטען: ',name);$('documentFileName').classList.add('loaded');liveDocument();renderDoc()}catch{toast('לא ניתן לקרוא את הקובץ. נסה לבחור אותו שוב.')}finally{e.target.value=''}};$('renderDoc').onclick=()=>renderDoc({force:true});$('print').onclick=downloadDocumentPDF;let fontFileURL=null;
+$('mdFile').onchange=e=>{const file=e.target.files[0];if(file)importDocumentFile(file)};$('renderDoc').onclick=()=>renderDoc({force:true});$('print').onclick=downloadDocumentPDF;let fontFileURL=null;
 async function fontBytes(){
  const library={},name=$('fontName').value||'My Dyo Handwriting';let budgetStart=performance.now();
  for(const [c,versions] of Object.entries(data.glyphs)){
@@ -271,10 +271,12 @@ function demoDocument(){let math=groups.math;return [
 ...Array.from({length:Math.ceil(math.length/8)},(_,i)=>'$$'+math.slice(i*8,(i+1)*8).join(' \\quad ')+'$$')
 ].join('\n\n')}
 let documentTimer=null;
-function liveDocument(){cancelDocumentRender();clearTimeout(documentTimer);documentTimer=setTimeout(()=>{try{localStorage.setItem('dyo-document-v1',$('md').value)}catch{}renderDoc();window.dyoChanged?.('document')},140);$('docState').textContent='מעדכן…'}
+function liveDocument(){dyoDocumentRevision++;cancelDocumentRender();clearTimeout(documentTimer);documentTimer=setTimeout(()=>{saveDocumentSource($('md').value).catch(()=>toast('המסמך לא נשמר. הורידו עותק באמצעות שמירת טקסט.'));renderDoc();window.dyoChanged?.('document')},140);$('docState').textContent='מעדכן…'}
 $('md').oninput=liveDocument;
-$('loadDemo').onclick=()=>{if($('md').value.trim()&&$('md').value!==demoDocument()&&!confirm('להחליף את הטקסט במסמך הדוגמה? האותיות שלך לא ישתנו.'))return;$('md').value=demoDocument();liveDocument()};
+$('loadDemo').onclick=()=>{if($('md').value.trim()&&$('md').value!==demoDocument()&&!confirm('להחליף את הטקסט במסמך הדוגמה? האותיות שלך לא ישתנו.'))return;$('md').value=demoDocument();dyoDocumentFileName='';dyoDocumentReport=null;dyoDocumentAssets={};dyoDocumentAssetRevision++;showDocumentImportReport();liveDocument()};
 try{let saved=localStorage.getItem('dyo-document-v1');$('md').value=saved===null?demoDocument():saved}catch{$('md').value=demoDocument()}
 
 stats();pick(char);
 openTab(tabFromAddress(),false);
+
+restoreDocumentSource();

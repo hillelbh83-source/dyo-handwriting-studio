@@ -54,6 +54,33 @@ function equationWritingLane(element,visual){
  }
  return lane;
 }
+
+const nativeMathCharacterCache=new Map();
+function nativeMathCharacter(c,element,fontSize,x,y,width,height){
+ const style=getComputedStyle(element),font=style.fontStyle+' '+style.fontWeight+' '+fontSize+'px '+style.fontFamily,key=c+'|'+font;
+ let cached=nativeMathCharacterCache.get(key);
+ if(!cached){
+  const metrics=mathMeasureContext;metrics.font=font;const m=metrics.measureText(c),padding=2,w=Math.max(1,m.actualBoundingBoxLeft+m.actualBoundingBoxRight),h=Math.max(1,m.actualBoundingBoxAscent+m.actualBoundingBoxDescent);
+  const canvas=document.createElement('canvas');canvas.width=Math.ceil((w+padding*2)*2);canvas.height=Math.ceil((h+padding*2)*2);
+  const ctx=canvas.getContext('2d');ctx.scale(2,2);ctx.font=font;ctx.fillStyle='#263d39';ctx.fillText(c,padding+m.actualBoundingBoxLeft,padding+m.actualBoundingBoxAscent);
+  cached={url:canvas.toDataURL('image/png'),width:w+padding*2,height:h+padding*2,padding};canvas.width=canvas.height=0;
+  nativeMathCharacterCache.set(key,cached);if(nativeMathCharacterCache.size>1000)nativeMathCharacterCache.delete(nativeMathCharacterCache.keys().next().value);
+ }
+ return `<image href="${cached.url}" x="${x-cached.padding}" y="${y-cached.padding}" width="${cached.width}" height="${cached.height}"/>`;
+}
+function nativeMathShape(svg,box,pad,clipBox){
+ const canvas=document.createElement('canvas'),scale=2;
+ canvas.width=Math.max(1,Math.ceil(clipBox.width*scale));canvas.height=Math.max(1,Math.ceil(clipBox.height*scale));
+ const ctx=canvas.getContext('2d');ctx.fillStyle='#263d39';
+ for(const path of svg.querySelectorAll('path')){
+  const matrix=path.getScreenCTM();if(!matrix)continue;
+  ctx.setTransform(matrix.a*scale,matrix.b*scale,matrix.c*scale,matrix.d*scale,(matrix.e-clipBox.left)*scale,(matrix.f-clipBox.top)*scale);
+  ctx.fill(new Path2D(path.getAttribute('d')||''));
+ }
+ const url=canvas.toDataURL('image/png');canvas.width=canvas.height=0;
+ return `<image href="${url}" x="${clipBox.left-box.left+pad}" y="${clipBox.top-box.top+pad}" width="${clipBox.width}" height="${clipBox.height}"/>`;
+}
+
 function drawHandwrittenEquation(layout,size){
  const visual=layout.querySelector('.katex-html');if(!visual)return null;
  const display=Boolean(layout.closest('.document-math-display')),naturalness=(display?1:.55)*Math.max(0,Math.min(10,Number($('jitter').value)||0))/10;
@@ -97,7 +124,7 @@ function drawHandwrittenEquation(layout,size){
   const wave=Math.sin(lane.phase+progress*.4),drift=wave*Math.min(height,size)*.025*naturalness;
   const pose={angle:lane.angle+wave*.45*naturalness,scale:lane.scale,rise:lane.rise};
   const shape=handwritingMathPaths(c,x,y+drift,width,height,stroke*(1+(Math.random()-.5)*.12*naturalness),glyph,naturalness,pose);
-  if(shape)paths+=shape;else missing.push(c);
+  if(shape)paths+=shape;else{missing.push(c);paths+=nativeMathCharacter(c,element,fontSize,x,y,width,height)}
  }
  for(const line of visual.querySelectorAll('.frac-line,.overline-line,.underline-line')){
   const r=line.getBoundingClientRect(),style=getComputedStyle(line),bottom=parseFloat(style.borderBottomWidth)||0;
@@ -109,10 +136,11 @@ function drawHandwrittenEquation(layout,size){
   if(svg.closest('.sqrt')){
    const tail=svg.closest('.hide-tail'),tailBox=tail?.getBoundingClientRect();if(tailBox){x=tailBox.left-box.left+pad;y=tailBox.top-box.top+pad;width=tailBox.width;height=tailBox.height}
    const rootWidth=Math.min(width,parseFloat(getComputedStyle(svg).fontSize)*.9);
-   paths+=handwritingMathPaths('√',x,y,rootWidth,height,stroke,undefined,naturalness*.35)||'';
+   const rootShape=handwritingMathPaths('√',x,y,rootWidth,height,stroke,undefined,naturalness*.35);
+   paths+=rootShape||nativeMathShape(svg,box,pad,tailBox||r);
    paths+=handwrittenMathLine(x+rootWidth-stroke,y+stroke/2,width-rootWidth+stroke,stroke,naturalness);
   }else{
-   const fence=svg.closest('.mopen,.mclose');if(fence)paths+=handwritingMathPaths(fence.classList.contains('mopen')?'(':')',x,y,width,height,stroke,undefined,naturalness*.35)||'';
+   const fence=svg.closest('.mopen,.mclose');const shape=fence?handwritingMathPaths(fence.classList.contains('mopen')?'(':')',x,y,width,height,stroke,undefined,naturalness*.35):null;paths+=shape||nativeMathShape(svg,box,pad,r);
   }
  }
  const annotation=layout.querySelector('annotation')?.textContent||'';
@@ -150,13 +178,17 @@ async function applyHandwrittenMath(out,size,isCurrent=()=>true){
     try{layout.innerHTML=katex.renderToString(multiline,{displayMode:true,throwOnError:true,trust:false,strict:'ignore',output:'htmlAndMathml'});svg=drawHandwrittenEquation(layout,size)}catch{}
    }
   }
+  // Fit long formulas as complete equations, including on phones and in PDF.
+  const maxWidth=container.classList.contains('document-math-display')?container.clientWidth:out.clientWidth-32;
+  const svgWidth=+svg.getAttribute('width'),svgHeight=+svg.getAttribute('height');
+  if(maxWidth>0&&svgWidth>maxWidth){svg.setAttribute('width',maxWidth);svg.setAttribute('height',svgHeight*maxWidth/svgWidth)}
   svg.setAttribute('aria-label',layout.dataset.source);
   layout.nextElementSibling.replaceChildren(svg);container.classList.add('math-ready');
   await yieldHandwritingWork();
  }
 }
 async function renderMarkdownDocument(out,source,size,{force=false,isCurrent=()=>true}={}){
- const styleKey=JSON.stringify([size,rendering.ink,rendering.spacing,$('jitter').value,metrics,libraryRevision]);
+ const styleKey=JSON.stringify([size,rendering.ink,rendering.spacing,$('jitter').value,metrics,libraryRevision,dyoDocumentAssetRevision]);
  const sameStyle=out._documentStyleKey===styleKey&&out._documentLibrary===data;
  if(!force&&sameStyle&&out._documentRenderComplete!==false&&out._documentSource===source){out.dataset.mathReady='true';$('docState').textContent='התצוגה מעודכנת';return}
  out._documentRenderComplete=false;
@@ -165,6 +197,7 @@ async function renderMarkdownDocument(out,source,size,{force=false,isCurrent=()=
  if(!isCurrent())return;
  out._parsedSource=source;out._parsedHTML=html;
  template.innerHTML=html;
+ for(const image of template.content.querySelectorAll('img[data-document-image]')){const src=dyoDocumentAssets[image.dataset.documentImage];if(src&&/^data:image\/(png|jpeg|gif|webp);base64,[A-Za-z0-9+/=]+$/i.test(src))image.src=src;else{const warning=document.createElement('span');warning.className='document-image-warning';warning.textContent='[תמונה חסרה — יש לטעון מחדש את המסמך המקורי]';image.replaceWith(warning)}}
  // Match duplicate blocks in order: each keeps its own random letter choices.
  const reusable=new Map();
  if(!force&&sameStyle)for(const record of out._documentBlocks||[]){let queue=reusable.get(record.key);if(!queue){queue=[];reusable.set(record.key,queue)}queue.push(record.element)}
@@ -183,7 +216,7 @@ async function renderMarkdownDocument(out,source,size,{force=false,isCurrent=()=
    if(!block.matches('p,h1,h2,h3,h4,h5,h6,li,blockquote,th,td'))continue;
    const textWalker=document.createTreeWalker(block,NodeFilter.SHOW_TEXT);let text='';
    while(textWalker.nextNode())if(!textWalker.currentNode.parentElement.closest('.document-math-inline,.document-math-display'))text+=textWalker.currentNode.textContent;
-   setTextDirection(block,text);await breathe();if(!isCurrent())return;
+   setTextDirection(block,text);const alignment=block.closest('.word-aligned');if(alignment)block.style.textAlign=alignment.classList.contains('word-align-center')?'center':alignment.classList.contains('word-align-left')?'left':'right';await breathe();if(!isCurrent())return;
   }
  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);const nodes=[],writingFlows=new WeakMap();
  while(walker.nextNode()){
@@ -234,6 +267,8 @@ async function renderMarkdownDocument(out,source,size,{force=false,isCurrent=()=
  // Only a complete generation can become the source for the next incremental update.
  if(!isCurrent())return;
  out._documentSource=source;out._documentStyleKey=styleKey;out._documentLibrary=data;out._documentBlocks=records;
+ await Promise.all([...out.querySelectorAll('img.document-image')].map(image=>image.decode()));
+ if(!isCurrent())return;
  out._documentRenderComplete=true;
  out.dataset.mathReady='true';$('docState').textContent='התצוגה מעודכנת';
  pruneHandwritingDefinitions(out);

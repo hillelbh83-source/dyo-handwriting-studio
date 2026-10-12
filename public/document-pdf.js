@@ -11,6 +11,7 @@ async function documentPdfSlices(paper,width,height,pieces){
   if(piece.keepTogether&&piece.bottom-piece.top<pageHeight*.9)spans.push({top:Math.max(0,piece.top-3),bottom:piece.bottom+3});
   await breathe();
  }
+ for(const row of paper.querySelectorAll('tr')){const r=row.getBoundingClientRect();if(r.height<pageHeight*.9)spans.push({top:Math.max(0,r.top-box.top-2),bottom:r.bottom-box.top+2})}
  for(const heading of paper.querySelectorAll('h1,h2,h3,h4,h5,h6')){
   const r=heading.getBoundingClientRect(),next=heading.nextElementSibling;
   const firstLine=next?.querySelector('.ink-word,.handwritten-equation,code')||next;
@@ -26,9 +27,11 @@ async function documentPdfSlices(paper,width,height,pieces){
   for(const r of range.getClientRects())if(r.height>0&&r.height<pageHeight*.9)spans.push({top:Math.max(0,r.top-box.top-2),bottom:r.bottom-box.top+2});
   await breathe();
  }
+ const forced=[...paper.querySelectorAll('.document-page-break')].map(el=>el.getBoundingClientRect().top-box.top).filter(y=>y>0).sort((a,b)=>a-b);
  const slices=[];let start=0;
  while(start<height){
   let end=Math.min(height,start+pageHeight);
+  const nextBreak=forced.find(y=>y>start+1&&y<end);if(nextBreak)end=nextBreak;
   if(end<height){
    for(let i=0;i<spans.length+1;i++){
     const crossing=spans.filter(s=>s.top<end&&s.bottom>end&&s.top>start+pageHeight*.25);
@@ -97,12 +100,18 @@ async function snapshotDocumentVectors(paper){
    add(pdfSvgElement('line',{x1:x-box.left,y1:y-box.top,x2:(horizontal?r.right:x)-box.left,y2:(horizontal?y:r.bottom)-box.top,stroke:pdfColor(style['border'+side+'Color']),'stroke-width':thickness}),r);
   }
  }
+ for(const image of paper.querySelectorAll('img.document-image')){
+  await image.decode();const r=image.getBoundingClientRect();if(!r.width||!r.height)continue;
+  const node=pdfSvgElement('image',{x:r.left-box.left,y:r.top-box.top,width:r.width,height:r.height,preserveAspectRatio:'xMidYMid meet'});
+  // Embed the original image bytes; never resolve a remote URL during export.
+  node.setAttribute('href',image.currentSrc||image.src);add(node,r,true);await breathe();
+ }
  for(const svg of paper.querySelectorAll('svg')){
   if(svg.closest('.handwriting-math-layout')||svg.parentElement.closest('svg'))continue;
   const r=svg.getBoundingClientRect();
   if(!r.width||!r.height)continue;
   const group=pdfSvgElement('g');
-  const shapes=[...svg.querySelectorAll('path,circle,ellipse,line,polyline,polygon,rect')].map(shape=>({shape,matrix:shape.getScreenCTM(),shared:false}));
+  const shapes=[...svg.querySelectorAll('path,circle,ellipse,line,polyline,polygon,rect,image')].map(shape=>({shape,matrix:shape.getScreenCTM(),shared:false}));
   // Expand references from the shared outline library into standalone PDF paths.
   // This uses the selected outline, preserving exactly the preview's variants.
   for(const use of svg.querySelectorAll('use')){
@@ -194,9 +203,11 @@ async function downloadDocumentPDF(){
  paper.classList.add('pdf-export');paper.dataset.exporting='true';
  try{
   clearTimeout(documentTimer);
-  try{localStorage.setItem('dyo-document-v1',$('md').value)}catch{}
+  await saveDocumentSource($('md').value);
   await renderDoc({immediate:true});
   await document.fonts.ready;
+  if(paper.dataset.mathReady!=='true')throw Error('Document preview is incomplete');
+  await Promise.all([...paper.querySelectorAll('img.document-image')].map(image=>image.decode()));
   const box=paper.getBoundingClientRect(),width=box.width;
   if(!width||!box.height)throw Error('Document is hidden');
   const pieces=await snapshotDocumentVectors(paper);

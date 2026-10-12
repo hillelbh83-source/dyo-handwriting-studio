@@ -62,7 +62,7 @@ async function parseDocumentMarkdown(source){
  if(!source.trim())return '<p class="document-empty">המסמך שלך יופיע כאן.</p>';
  try{
   if(!handwritingMarkdownWorker){
-   handwritingMarkdownWorker=new Worker('document-markdown-worker.js?v=1');
+   handwritingMarkdownWorker=new Worker('document-markdown-worker.js?v=2');
    handwritingMarkdownWorker.onmessage=({data:result})=>{
     const pending=handwritingPendingParses.get(result.id);if(!pending)return;
     handwritingPendingParses.delete(result.id);result.error?pending.reject(Error(result.error)):pending.resolve(result.html);

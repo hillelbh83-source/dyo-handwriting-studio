@@ -303,3 +303,24 @@ button,a,input,select,textarea{touch-action:manipulation}
 .user-guide-link:focus-visible,.getting-started a:focus-visible,.workflow-note a:focus-visible,.getting-started summary:focus-visible{outline:3px solid #b36f31;outline-offset:4px}
 @media(max-width:900px){.headtools{flex-wrap:wrap;justify-content:flex-end}.user-guide-link{font-size:11px;padding:8px}.start-steps{grid-template-columns:1fr}.getting-started{padding:14px 16px}.getting-started summary>span{display:block;margin-inline-start:0}}
 @media print{.getting-started,.workflow-note,.document-input-label{display:none!important}}
+
+.document-import-report{margin:16px 0;padding:14px 18px;border:1px solid #cadbc2;border-radius:12px;background:#edf3e5;color:#38513f}
+.document-import-report[hidden]{display:none}
+.document-import-report p{font-size:12px;line-height:1.8;margin:5px 0;color:#53665e}
+.document-import-report .import-summary{font-weight:600;color:#263d39}
+.document-import-report summary{font-size:12px;cursor:pointer;margin-top:10px}
+.document-import-report li{font-size:12px;line-height:1.8;margin-top:6px}
+#docPaper .document-image{display:block;max-width:100%;height:auto;max-height:520px;object-fit:contain;margin:18px auto;break-inside:avoid}
+#docPaper .document-image-warning{font-size:.65em;color:#8c5b39}
+#docPaper .word-table-wrap{max-width:100%;overflow-x:auto;margin:1em 0}
+#docPaper .word-table{display:table;width:100%;table-layout:fixed;margin:0;font-size:.8em}
+#docPaper .word-table td{min-width:0;overflow-wrap:anywhere;vertical-align:top;padding:.6em}
+#docPaper .word-table td>p:first-child{margin-top:0}
+#docPaper .word-table td>p:last-child{margin-bottom:0}
+#docPaper .word-align-center{text-align:center}
+#docPaper .word-align-left{text-align:left}
+#docPaper .word-align-right{text-align:right}
+#docPaper .document-page-break{height:24px;border-top:1px dashed #b5c5af;margin:24px 0;position:relative}
+#docPaper .document-page-break::after{content:'מעבר עמוד';position:absolute;top:0;inset-inline-end:0;font:10px/2 Arial,sans-serif;color:#7b8580}
+@media(max-width:600px){.document-import-report{padding:12px}#docPaper .word-table{font-size:.7em}}
+@media print{#docPaper .document-page-break{break-before:page;height:0;border:0;margin:0}#docPaper .document-page-break::after{display:none}.document-import-report{display:none!important}}
