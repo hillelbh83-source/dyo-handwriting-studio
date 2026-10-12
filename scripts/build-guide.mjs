@@ -14,7 +14,7 @@ for (const he of [false, true]) {
   let chapter = 0;
   for (let i = 0; i < tokens.length; i++) {
     const token = tokens[i];
-    if (token.type === 'html_block' && /^<a id="/.test(token.content)) token.content = '';
+    if (token.type === 'html_block' && chapters.some(id => token.content.trim() === `<a id="${id}"></a>`)) token.content = '';
     if (token.type === 'heading_open' && token.tag === 'h2' && /^\d+\./.test(tokens[i + 1].content)) token.attrSet('id', chapters[chapter++]);
 
   }

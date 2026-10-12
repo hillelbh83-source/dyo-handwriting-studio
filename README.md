@@ -2,6 +2,8 @@
 
 **Your handwriting, from the first letter to a finished document.** Draw letters, give each one a few natural variations, and turn Hebrew, English, and mathematical text into handwritten PDFs. You can also export an installable font.
 
+**From an AI answer to a handwritten PDF:** ask your AI assistant for Markdown (MD), copy the Markdown source into the studio’s **מסמך** (Document) text box, check the preview, and click **הורדת PDF** (Download PDF). No intermediate file or conversion tool is needed. [See the steps and a ready-to-copy prompt](#ai-to-pdf).
+
 **Choose your guide:** [English](README.md) · [עברית — המדריך המלא](README.he.md)
 
 The studio interface is in Hebrew. This English guide includes the Hebrew button labels so you can find your way around. Once the studio is running, a readable guide is available at [localhost:5173/guide.html](http://localhost:5173/guide.html), with a language switch and chapter navigation.
@@ -129,6 +131,32 @@ Enter one character in **תו נוסף** (Extra character), then click **הוס�
 In **מסמך**, paste or type into the text box, or choose **טעינת מסמך** (Load document) for a `.txt` or `.md` file. Uploaded text files must be no larger than 1 MB. Loading a file replaces the text in the editor, so save your current text first.
 
 The preview updates as you type. **רענון תצוגה** (Refresh preview) rebuilds it manually. **מסמך לדוגמה — כל התווים** (Sample document — all characters) is useful for spotting gaps in your library; it asks before replacing existing non-demo text.
+
+<a id="ai-to-pdf"></a>
+### Turn an AI answer into a PDF
+
+To turn a summary, explanation, lesson, or other AI-generated text into a handwritten document, ask the AI to write in **Markdown (MD)**. Then copy the source directly into Dyo. You do not need to create or upload a `.md` file first.
+
+1. **Ask for Markdown.** Use the prompt below and replace the bracketed topic with your request.
+2. **Copy the Markdown source.** If the AI presents it in a code block, use that block’s copy button. Paste only the document content, without the enclosing triple backticks or the AI’s introductory comments.
+3. **Paste into Dyo.** Open **מסמך** (Document) and paste into **הטקסט שלכם** (Your text). Save any existing text before replacing it.
+4. **Check the preview.** Dyo formats the headings, paragraphs, lists, tables, and supported formulas, using your saved handwriting where available. Adjust text size and ink weight if needed.
+5. **Download the PDF.** Click **הורדת PDF** (Download PDF), then open the downloaded file to check its pages before sharing it.
+
+A ready-to-copy prompt:
+
+```text
+Write [your topic or request] as Markdown (MD) source that I can paste
+into Dyo Handwriting Studio. Use clear headings, short paragraphs,
+and lists or simple tables where appropriate. For mathematics, use
+LaTeX with $...$ for inline formulas and $$...$$ for display formulas.
+Return only the document content, without an introduction or enclosing
+triple backticks. Do not use HTML or rely on external images.
+```
+
+**Markdown provides the formatting; your saved letter library provides the handwriting.** If a character is missing, draw it in the letter lab. Review the AI’s content and the document preview before exporting, especially for wide tables or long formulas. Use **שמירת טקסט** (Save text) if you also want an editable Markdown copy.
+
+### Format text yourself
 
 Plain text works immediately. **Markdown** is plain text with simple formatting marks:
 

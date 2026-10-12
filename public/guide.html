@@ -6,6 +6,7 @@
 <div class="guide-layout"><aside><details open><summary>Contents</summary><nav aria-label="Guide chapters"><a href="#start">1. Your first document</a><a href="#setup">2. Download and run</a><a href="#tour">3. Find your way around</a><a href="#draw">4. Draw letters and variants</a><a href="#document">5. Write and format a document</a><a href="#math">6. Mathematics and LaTeX</a><a href="#export">7. Export PDF or font</a><a href="#backup">8. Save, back up, and restore</a><a href="#mobile">9. Use a phone or tablet</a><a href="#troubleshooting">10. Troubleshooting</a><a href="#development">11. For developers</a><a href="#credits">12. Libraries and credits</a></nav></details><p>At your own pace. Start small and return to any chapter when you need it.</p></aside>
 <main id="content" tabindex="-1"><div class="guide-eyebrow">DRAW · WRITE · KEEP</div><article><h1>Dyo Handwriting Studio</h1>
 <p><strong>Your handwriting, from the first letter to a finished document.</strong> Draw letters, give each one a few natural variations, and turn Hebrew, English, and mathematical text into handwritten PDFs. You can also export an installable font.</p>
+<p><strong>From an AI answer to a handwritten PDF:</strong> ask your AI assistant for Markdown (MD), copy the Markdown source into the studio’s <strong>מסמך</strong> (Document) text box, check the preview, and click <strong>הורדת PDF</strong> (Download PDF). No intermediate file or conversion tool is needed. <a href="#ai-to-pdf">See the steps and a ready-to-copy prompt</a>.</p>
 <p><strong>Choose your guide:</strong> <a href="guide.html">English</a> · <a href="guide.he.html">עברית — המדריך המלא</a></p>
 <p>The studio interface is in Hebrew. This English guide includes the Hebrew button labels so you can find your way around. Once the studio is running, a readable guide is available at <a href="http://localhost:5173/guide.html">localhost:5173/guide.html</a>, with a language switch and chapter navigation.</p>
 <h2 id="start">1. Your first document</h2>
@@ -109,6 +110,26 @@ npm run dev
 <h2 id="document">5. Write and format a document</h2>
 <p>In <strong>מסמך</strong>, paste or type into the text box, or choose <strong>טעינת מסמך</strong> (Load document) for a <code>.txt</code> or <code>.md</code> file. Uploaded text files must be no larger than 1 MB. Loading a file replaces the text in the editor, so save your current text first.</p>
 <p>The preview updates as you type. <strong>רענון תצוגה</strong> (Refresh preview) rebuilds it manually. <strong>מסמך לדוגמה — כל התווים</strong> (Sample document — all characters) is useful for spotting gaps in your library; it asks before replacing existing non-demo text.</p>
+<p><a id="ai-to-pdf"></a></p>
+<h3>Turn an AI answer into a PDF</h3>
+<p>To turn a summary, explanation, lesson, or other AI-generated text into a handwritten document, ask the AI to write in <strong>Markdown (MD)</strong>. Then copy the source directly into Dyo. You do not need to create or upload a <code>.md</code> file first.</p>
+<ol>
+<li><strong>Ask for Markdown.</strong> Use the prompt below and replace the bracketed topic with your request.</li>
+<li><strong>Copy the Markdown source.</strong> If the AI presents it in a code block, use that block’s copy button. Paste only the document content, without the enclosing triple backticks or the AI’s introductory comments.</li>
+<li><strong>Paste into Dyo.</strong> Open <strong>מסמך</strong> (Document) and paste into <strong>הטקסט שלכם</strong> (Your text). Save any existing text before replacing it.</li>
+<li><strong>Check the preview.</strong> Dyo formats the headings, paragraphs, lists, tables, and supported formulas, using your saved handwriting where available. Adjust text size and ink weight if needed.</li>
+<li><strong>Download the PDF.</strong> Click <strong>הורדת PDF</strong> (Download PDF), then open the downloaded file to check its pages before sharing it.</li>
+</ol>
+<p>A ready-to-copy prompt:</p>
+<pre><code class="language-text">Write [your topic or request] as Markdown (MD) source that I can paste
+into Dyo Handwriting Studio. Use clear headings, short paragraphs,
+and lists or simple tables where appropriate. For mathematics, use
+LaTeX with $...$ for inline formulas and $$...$$ for display formulas.
+Return only the document content, without an introduction or enclosing
+triple backticks. Do not use HTML or rely on external images.
+</code></pre>
+<p><strong>Markdown provides the formatting; your saved letter library provides the handwriting.</strong> If a character is missing, draw it in the letter lab. Review the AI’s content and the document preview before exporting, especially for wide tables or long formulas. Use <strong>שמירת טקסט</strong> (Save text) if you also want an editable Markdown copy.</p>
+<h3>Format text yourself</h3>
 <p>Plain text works immediately. <strong>Markdown</strong> is plain text with simple formatting marks:</p>
 <pre><code class="language-markdown"># My notebook
 ## A smaller heading
