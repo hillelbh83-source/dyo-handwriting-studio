@@ -9,7 +9,8 @@ function handwritingBounds(g){
  for(const stroke of g.strokes)for(const [x,y] of stroke.points){bounds.left=Math.min(bounds.left,x);bounds.right=Math.max(bounds.right,x);bounds.top=Math.min(bounds.top,y);bounds.bottom=Math.max(bounds.bottom,y)}
  handwritingBoundsCache.set(g,bounds);return bounds;
 }
-function handwritingMathPaths(c,x,y,width,height,stroke,selectedGlyph,naturalness=0){
+function handwritingMathPaths(c,x,y,width,height,stroke,selectedGlyph,naturalness=0,writingPose=null){
+ if(c==='.'||c===':')stroke*=1.5;
  const g=selectedGlyph===undefined?mathHandwritingGlyph(c):selectedGlyph;if(!g)return null;
  const b=handwritingBounds(g);width=Math.max(width,stroke*2);height=Math.max(height,stroke*2);
  let sx=(width-stroke)/Math.max(1,b.right-b.left),sy=(height-stroke)/Math.max(1,b.bottom-b.top);
@@ -20,8 +21,11 @@ function handwritingMathPaths(c,x,y,width,height,stroke,selectedGlyph,naturalnes
  }
  const paths=glyphPaths(g.strokes.map(s=>({...s,w:stroke,points:s.points.map(([px,py])=>[x+(px-b.left)*sx+stroke/2,y+(py-b.top)*sy+stroke/2])})));
  if(!naturalness)return paths;
- const cx=x+width/2,cy=y+height*.8,angle=(Math.random()-.5)*8*naturalness,scale=1+(Math.random()-.5)*.24*naturalness;
- const dx=(Math.random()-.5)*height*.045*naturalness,dy=(Math.random()-.5)*height*.14*naturalness;
+ const cx=x+width/2,cy=y+height*.8;
+ const angle=writingPose?writingPose.angle+(Math.random()-.5)*1.2*naturalness:(Math.random()-.5)*8*naturalness;
+ const scale=writingPose?writingPose.scale+(Math.random()-.5)*.04*naturalness:1+(Math.random()-.5)*.24*naturalness;
+ const dx=(Math.random()-.5)*height*.025*naturalness;
+ const dy=writingPose?writingPose.rise*height:(Math.random()-.5)*height*.14*naturalness;
  return `<g transform="translate(${cx+dx} ${cy+dy}) rotate(${angle}) scale(${scale}) translate(${-cx} ${-cy})">${paths}</g>`;
 }
 function handwrittenFractionBar(x,y,width,stroke){
@@ -41,15 +45,29 @@ function handwrittenMathLine(x,y,width,stroke,naturalness,useFractionGlyph=false
  return `<path d="M${x} ${y}Q${x+width*.48} ${y+bend} ${x+width} ${y+tilt}" fill="none" stroke="currentColor" stroke-width="${stroke}" stroke-linecap="round"/>`;
 }
 function canvasMathMetrics(element,c){const style=getComputedStyle(element);mathMeasureContext.font=style.fontStyle+' '+style.fontWeight+' '+style.fontSize+' '+style.fontFamily;return {metrics:mathMeasureContext.measureText(c),fontSize:parseFloat(style.fontSize)}}
+function equationWritingLane(element,visual){
+ let lane=visual;
+ // The outer row of a fraction owns its whole numerator/denominator, including
+ // any nested superscripts. Do not let individual script letters reset the hand.
+ for(let node=element;node&&node!==visual;node=node.parentElement){
+  if(node.tagName==='SPAN'&&node.parentElement?.classList.contains('vlist')&&!node.querySelector(':scope > .frac-line'))lane=node;
+ }
+ return lane;
+}
 function drawHandwrittenEquation(layout,size){
  const visual=layout.querySelector('.katex-html');if(!visual)return null;
- const display=Boolean(layout.closest('.document-math-display')),naturalness=display?Math.max(0,Math.min(10,Number($('jitter').value)||0))/10:0;
+ const display=Boolean(layout.closest('.document-math-display')),naturalness=(display?1:.55)*Math.max(0,Math.min(10,Number($('jitter').value)||0))/10;
  const stroke=rendering.ink*size/280,walker=document.createTreeWalker(visual,NodeFilter.SHOW_TEXT),nodes=[];
  while(walker.nextNode())if(walker.currentNode.textContent.trim()&&!walker.currentNode.parentElement.closest('svg'))nodes.push(walker.currentNode);
- const letters=[];
+ const letters=[],lanes=new Map();
+ const laneFor=element=>{
+  const key=equationWritingLane(element,visual);let lane=lanes.get(key);
+  if(!lane){lane={element:key,phase:Math.random()*Math.PI*2,angle:(Math.random()-.5)*5*naturalness,scale:1+(Math.random()-.5)*.08*naturalness,rise:(Math.random()-.5)*.045*naturalness};lanes.set(key,lane)}
+  return lane;
+ };
  // Reserve space using handwriting proportions before asking the browser for LaTeX positions.
  for(const node of nodes){
-  const fragment=document.createDocumentFragment();
+  const fragment=document.createDocumentFragment(),lane=laneFor(node.parentElement);
   for(const c of node.textContent){
    if(/\s/.test(c)||c==='\u200b'){fragment.append(document.createTextNode(c));continue}
    const {metrics:m,fontSize}=canvasMathMetrics(node.parentElement,c),g=mathHandwritingGlyph(c);
@@ -57,21 +75,28 @@ function drawHandwrittenEquation(layout,size){
    let width=nativeWidth;
    if(g&&height>stroke&&nativeWidth>stroke&&!['\ue020','′','″'].includes(c)){
     const b=handwritingBounds(g),naturalWidth=(b.right-b.left)/Math.max(1,b.bottom-b.top)*(height-stroke)+stroke;
-    width=naturalness?Math.max(nativeWidth*.6,Math.min(nativeWidth*1.8,naturalWidth))*(1+(Math.random()-.5)*.12*naturalness):Math.max(nativeWidth*.8,Math.min(nativeWidth*1.4,naturalWidth));
+    width=naturalness?Math.max(nativeWidth*.6,Math.min(nativeWidth*1.8,naturalWidth))*lane.scale*(1+(Math.random()-.5)*.06*naturalness):Math.max(nativeWidth*.8,Math.min(nativeWidth*1.4,naturalWidth));
    }
    const span=document.createElement('span');span.className='math-layout-character';span.textContent=c;span.dir='ltr';
    span.style.width=Math.max(0,m.width+width-nativeWidth)+'px';fragment.append(span);
-   letters.push({element:span,c,glyph:g,metrics:m,fontSize,width,height});
+   if(naturalness&&/^[=+−\-±×÷<>≤≥≠≈]$/.test(c)&&node.parentElement.closest('.mrel,.mbin')){
+    span.style.marginInlineStart=fontSize*naturalness*(.012+Math.random()*.045)+'px';
+    span.style.marginInlineEnd=fontSize*naturalness*(.012+Math.random()*.045)+'px';
+   }
+   letters.push({element:span,c,glyph:g,metrics:m,fontSize,width,height,lane});
   }
   node.replaceWith(fragment);
  }
- const box=visual.getBoundingClientRect();let paths='',missing=[];const pad=4+Math.ceil(size*.2*naturalness),phase=Math.random()*Math.PI*2;
- for(const {element,c,glyph,metrics:m,fontSize,width,height} of letters){
+ const box=visual.getBoundingClientRect();let paths='',missing=[];const pad=4+Math.ceil(size*.2*naturalness);
+ for(const lane of lanes.values())lane.box=lane.element.getBoundingClientRect();
+ for(const {element,c,glyph,metrics:m,fontSize,width,height,lane} of letters){
   const rect=element.getBoundingClientRect(),fontAscent=m.fontBoundingBoxAscent??fontSize*.8,fontDescent=m.fontBoundingBoxDescent??fontSize*.2;
   const baseline=rect.top+(rect.height-fontAscent-fontDescent)/2+fontAscent;
   const x=rect.left-box.left-m.actualBoundingBoxLeft+pad,y=baseline-m.actualBoundingBoxAscent-box.top+pad;
-  const drift=Math.sin(phase+(rect.left-box.left)/Math.max(1,size)*.65)*Math.min(height,size)*.045*naturalness;
-  const shape=handwritingMathPaths(c,x,y+drift,width,height,stroke*(1+(Math.random()-.5)*.12*naturalness),glyph,naturalness);
+  const progress=(rect.left-lane.box.left)/Math.max(1,size);
+  const wave=Math.sin(lane.phase+progress*.4),drift=wave*Math.min(height,size)*.025*naturalness;
+  const pose={angle:lane.angle+wave*.45*naturalness,scale:lane.scale,rise:lane.rise};
+  const shape=handwritingMathPaths(c,x,y+drift,width,height,stroke*(1+(Math.random()-.5)*.12*naturalness),glyph,naturalness,pose);
   if(shape)paths+=shape;else missing.push(c);
  }
  for(const line of visual.querySelectorAll('.frac-line,.overline-line,.underline-line')){
@@ -160,7 +185,7 @@ async function renderMarkdownDocument(out,source,size,{force=false,isCurrent=()=
    while(textWalker.nextNode())if(!textWalker.currentNode.parentElement.closest('.document-math-inline,.document-math-display'))text+=textWalker.currentNode.textContent;
    setTextDirection(block,text);await breathe();if(!isCurrent())return;
   }
- const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);const nodes=[];
+ const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);const nodes=[],writingFlows=new WeakMap();
  while(walker.nextNode()){
   const node=walker.currentNode;if(!node.textContent.trim()||node.parentElement.closest('code,pre,.document-math-inline,.document-math-display'))continue;
   nodes.push(node);
@@ -169,7 +194,11 @@ async function renderMarkdownDocument(out,source,size,{force=false,isCurrent=()=
   const heading=node.parentElement.closest('h1,h2,h3,h4,h5,h6');const factors={H1:1.65,H2:1.45,H3:1.25,H4:1.15,H5:1.08,H6:1};
   if(root.classList.contains('document-empty'))continue;
   const fragment=document.createDocumentFragment();
-  for(const batch of inkBatches(node.textContent,size*(heading?factors[heading.tagName]:1),node.parentElement.closest('strong')?1.2:1)){
+  const writingBlock=node.parentElement.closest('p,h1,h2,h3,h4,h5,h6,li,th,td')||root;
+  let flow=writingFlows.get(writingBlock);
+  if(!flow){flow=createHandwritingFlow(+$('jitter').value||0);writingFlows.set(writingBlock,flow)}
+  if(node.previousSibling?.nodeName==='BR')flow.newLine();
+  for(const batch of inkBatches(node.textContent,size*(heading?factors[heading.tagName]:1),node.parentElement.closest('strong')?1.2:1,flow)){
    fragment.append(batch);await breathe();if(!isCurrent())return;
   }
   node.replaceWith(fragment);

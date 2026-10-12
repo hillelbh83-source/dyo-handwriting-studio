@@ -5,6 +5,56 @@ const correctedGlyphCache=new WeakMap(),glyphSVGCache=new WeakMap();
 const handwritingSVGNamespace='http://www.w3.org/2000/svg';
 let handwritingDefinitionRoot=null,handwritingDefinitionSequence=0;
 const handwritingDefinitions=new Map();
+const handwritingNodeMetrics=new WeakMap(),handwritingEdgeCache=new WeakMap();
+function createHandwritingFlow(jitter){
+ const strength=Math.max(0,Math.min(10,jitter))/10;
+ let phase=Math.random()*Math.PI*2,slowPhase=Math.random()*Math.PI*2;
+ return {
+  position:0,strength,
+  sample(){
+   const x=this.position;
+   return {rise:strength*(.72*Math.sin(x/7+phase)+.28*Math.sin(x/19+slowPhase)),angle:strength*(1.9*Math.sin(x/13+slowPhase)+.5*Math.sin(x/5+phase)),pace:Math.sin(x/15+slowPhase)};
+  },
+  advance(distance){this.position+=Math.max(0,distance)},
+  newLine(){this.position=0;phase+=.6+Math.random()*.6;slowPhase+=.4+Math.random()*.6}
+ };
+}
+function handwritingEdges(g,weight){
+ let entries=handwritingEdgeCache.get(g);if(!entries){entries=new Map();handwritingEdgeCache.set(g,entries)}
+ if(entries.has(weight))return entries.get(weight);
+ const left=Array(12).fill(Infinity),right=Array(12).fill(-Infinity);
+ const include=(x,y,radius)=>{
+  const first=Math.max(0,Math.floor((y-radius)/50)),last=Math.min(11,Math.floor((y+radius)/50));
+  for(let band=first;band<=last;band++){left[band]=Math.min(left[band],x-radius);right[band]=Math.max(right[band],x+radius)}
+ };
+ for(const stroke of g.strokes){
+  const radius=stroke.fill?0:stroke.w*weight/2,points=stroke.points;
+  for(let i=0;i<points.length;i++){
+   const [x,y]=points[i];include(x,y,radius);
+   const previous=points[i-1]||(stroke.fill?points.at(-1):null);if(!previous)continue;
+   const [px,py]=previous;if(Math.abs(y-py)<.001)continue;
+   const first=Math.max(0,Math.floor(Math.min(y,py)/50)),last=Math.min(11,Math.floor(Math.max(y,py)/50));
+   for(let band=first;band<=last;band++){
+    const sampleY=Math.max(Math.min(y,py),Math.min(Math.max(y,py),band*50+25));
+    include(px+(x-px)*(sampleY-py)/(y-py),sampleY,radius);
+   }
+  }
+ }
+ const result={left,right};entries.set(weight,result);return result;
+}
+function handwritingPairGap(previous,next,direction,size,flow){
+ const a=handwritingNodeMetrics.get(previous),b=handwritingNodeMetrics.get(next);if(!a||!b)return size*.018;
+ let clearance=Infinity;
+ for(let band=0;band<12;band++){
+  if(!Number.isFinite(a.edges.left[band])||!Number.isFinite(b.edges.left[band]))continue;
+  const gap=direction==='rtl'?b.advance-b.edges.right[band]*b.scale+a.edges.left[band]*a.scale:a.advance-a.edges.right[band]*a.scale+b.edges.left[band]*b.scale;
+  clearance=Math.min(clearance,gap);
+ }
+ if(!Number.isFinite(clearance))return size*.018;
+ const target=size*(.065+flow.strength*.009*flow.sample().pace);
+ // A small, bounded adjustment lets contours nest without collapsing words.
+ return Math.max(-size*.028,Math.min(size*.14,target-clearance));
+}
 function yieldHandwritingWork(){return new Promise(resolve=>setTimeout(resolve,0))}
 let handwritingMarkdownWorker=null,handwritingParseSequence=0;
 const handwritingPendingParses=new Map();

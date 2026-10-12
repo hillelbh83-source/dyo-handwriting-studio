@@ -102,19 +102,67 @@ function variants(){
 }
 $('variantPrevious').onclick=()=>{variantPage--;variants()};$('variantNext').onclick=()=>{variantPage++;variants()};
 $('group').onchange=()=>{let chars=groups[$('group').value];if(chars.length)pick(chars[0]);else{toast('הוסף תו בשדה שמתחת לספריית התווים');$('group').value=Object.keys(groups).find(g=>groups[g].includes(char))||'he';renderChars()}};$('nextMissing').onclick=()=>{let g=groups[$('group').value],c=g.find(c=>!data.glyphs[c]?.length);c?pick(c):toast('כל התווים בקבוצה כבר מוכנים! הוסף להם עוד גרסאות.')};
-function glyphNode(c,size,wordDrift=0,weight=1,jitter=+$('jitter').value||0){
+function glyphNode(c,size,wordDrift=0,weight=1,jitter=+$('jitter').value||0,motion=null){
+ if(c==='.'||c===':')weight*=1.5;
  const span=document.createElement('span'),versions=data.glyphs[c];
  if(!versions?.length){renderCharacterLabel(span,c);span.className='fallback';span.style.fontSize=size+'px';return span}
- const g=correctedGlyph(c,versions[Math.floor(Math.random()*versions.length)]),scale=size/280;
+ const g=correctedGlyph(c,versions[Math.floor(Math.random()*versions.length)]);
+ const digitHeight=motion?.inlineDigits&&/^[0-9]$/.test(c)?handwritingBounds(g).bottom-handwritingBounds(g).top:280;
+ const scale=size/Math.max(280,Number.isFinite(digitHeight)?digitHeight:280);
  span.className='glyph';span.append(sharedGlyphNode(g,weight));
- span.style.cssText=`width:${g.width*scale}px;height:${600*scale}px;margin-top:${-160*scale}px;margin-bottom:${-160*scale}px;transform-origin:50% 73.333%;transform:translateY(${wordDrift+(Math.random()-.5)*jitter*.35}px) rotate(${(Math.random()-.5)*jitter*.5}deg);opacity:1`;
+ const rise=motion?motion.y+(Math.random()-.5)*jitter*.045:wordDrift+(Math.random()-.5)*jitter*.35;
+ const angle=motion?motion.angle+(Math.random()-.5)*jitter*.045:(Math.random()-.5)*jitter*.5;
+ handwritingNodeMetrics.set(span,{edges:handwritingEdges(g,weight),scale,advance:g.width*scale});
+ span.style.cssText=`width:${g.width*scale}px;height:${600*scale}px;margin-top:${-160*scale}px;margin-bottom:${-160*scale}px;transform-origin:50% 73.333%;transform:translateY(${rise}px) rotate(${angle}deg);opacity:1`;
  return span;
 }
 function textDirection(text,fallback='rtl'){let letter=text.replace(/\$[^$]*\$/g,'').match(/[\u0590-\u05ffA-Za-z\u0370-\u03ff]/);if(letter)return /[\u0590-\u05ff]/.test(letter[0])?'rtl':'ltr';return /[0-9]/.test(text)?'ltr':fallback}
 function setTextDirection(el,text){el.dir=textDirection(text);el.style.textAlign=el.dir==='ltr'?'left':'right'}
 const rtlMirroredCharacters={'(':')',')':'(','[':']',']':'[','{':'}','}':'{','<':'>','>':'<'};
 function displayInkCharacter(c,direction){return direction==='rtl'?(rtlMirroredCharacters[c]||c):c}
-function* inkBatches(text,size,weight=1){let f=document.createDocumentFragment(),j=+$('jitter').value||0,run=null,runDir=null,base=textDirection(text),batchCount=0;function getRun(dir){if(!run||runDir!==dir){run=document.createElement('bdi');run.className='ink-run';run.dir=dir;run.style.direction=dir;f.append(run);runDir=dir}return run}for(let part of text.split(/(\s+)/)){if(!part)continue;if(/^\s+$/.test(part)){for(let c of part){if(c==='\n'){f.append(document.createElement('br'));run=null;runDir=null;continue}let gap=document.createElement('span');gap.className='word-gap';gap.textContent=' ';gap.style.width=size*(rendering.spacing/100)*(1+(Math.random()-.5)*j*.014)+'px';getRun(runDir||base).append(gap)}continue}let direction=textDirection(part,runDir||base),word=document.createElement('bdi');word.className='ink-word';word.dir=direction;word.style.direction=direction;getRun(direction).append(word);let drift=(Math.random()-.5)*j*.5,phase=Math.random()*6.28,wordSize=size*(1+(Math.random()-.5)*j*.014),index=0;for(let chunk of part.match(/[\u0590-\u05ff]+|[A-Za-z0-9\u0370-\u03ff]+|[^\u0590-\u05ffA-Za-z0-9\u0370-\u03ff]+/g)||[]){let segment=document.createElement('span');segment.className='ink-chunk';segment.dir=textDirection(chunk,direction);segment.style.direction=segment.dir;word.append(segment);for(let c of chunk){let baseline=drift+Math.sin(phase+index*.72)*j*.4;let node=glyphNode(displayInkCharacter(c,segment.dir),wordSize,baseline,weight,j);if(node.className==='glyph')node.style.marginInlineEnd=(size*.018*(1+(Math.random()-.5)*j*.06))+'px';segment.append(node);index++;if(++batchCount%128===0){yield f;f=document.createDocumentFragment()}}}}yield f}
+function* inkBatches(text,size,weight=1,flow=null){
+ let fragment=document.createDocumentFragment(),run=null,runDir=null,batchCount=0;
+ const jitter=+$('jitter').value||0,base=textDirection(text);
+ flow??=createHandwritingFlow(jitter);
+ function getRun(direction){
+  if(!run||runDir!==direction){run=document.createElement('bdi');run.className='ink-run';run.dir=direction;run.style.direction=direction;fragment.append(run);runDir=direction}
+  return run;
+ }
+ for(const part of text.split(/(\s+)/)){
+  if(!part)continue;
+  if(/^\s+$/.test(part)){
+   for(const c of part){
+    if(c==='\n'){fragment.append(document.createElement('br'));run=null;runDir=null;flow.newLine();continue}
+    const gap=document.createElement('span'),pace=flow.sample().pace;
+    const width=size*(rendering.spacing/100)*(1+flow.strength*(.10*pace+.08*(Math.random()-.5)));
+    gap.className='word-gap';gap.textContent=' ';gap.style.width=width+'px';getRun(runDir||base).append(gap);flow.advance(width/size);
+    if(++batchCount%128===0){yield fragment;fragment=document.createDocumentFragment()}
+   }
+   continue;
+  }
+  // A sentence-ending period belongs to the surrounding Hebrew sentence, while
+  // the complete number (including decimal separators) remains left-to-right.
+  const numericSentenceEnd=base==='rtl'&&/^[+\-−]?\d+(?:[.,]\d+)*(?:[%‰])?[.,!?;:]+$/.test(part);
+  const direction=numericSentenceEnd?'rtl':textDirection(part,runDir||base),word=document.createElement('bdi'),wordPace=flow.sample().pace;
+  word.className='ink-word';word.dir=direction;word.style.direction=direction;getRun(direction).append(word);
+  const wordSize=size*(1+flow.strength*(.024*wordPace+.045*(Math.random()-.5)));
+  let previous=null,previousDirection=null;
+  for(const chunk of part.match(/[\u0590-\u05ff]+|[+\-−]?\d+(?:[.,]\d+)*(?:[%‰])?|[A-Za-z0-9\u0370-\u03ff]+|[^\u0590-\u05ffA-Za-z0-9\u0370-\u03ff]+/g)||[]){
+   const segment=document.createElement('span');segment.className='ink-chunk';segment.dir=textDirection(chunk,direction);segment.style.direction=segment.dir;word.append(segment);
+   if(segment.dir!==previousDirection)previous=null;
+   for(const c of chunk){
+    const sample=flow.sample(),node=glyphNode(displayInkCharacter(c,segment.dir),wordSize,0,weight,jitter,{y:size*.11*sample.rise,angle:sample.angle,inlineDigits:base==='rtl'});
+    if(previous&&previous.classList.contains('glyph')&&node.classList.contains('glyph'))previous.style.marginInlineEnd=handwritingPairGap(previous,node,segment.dir,size,flow)+'px';
+    if(node.classList.contains('glyph'))node.style.marginInlineEnd=size*.018+'px';
+    segment.append(node);
+    const advance=handwritingNodeMetrics.get(node)?.advance||wordSize*.55;flow.advance(advance/size);
+    previous=node;previousDirection=segment.dir;
+    if(++batchCount%128===0){yield fragment;fragment=document.createDocumentFragment()}
+   }
+  }
+ }
+ yield fragment;
+}
 function ink(text,size,weight=1){const fragment=document.createDocumentFragment();for(const batch of inkBatches(text,size,weight))fragment.append(batch);return fragment}
 $('jitter').oninput=()=>{renderDoc();window.dyoChanged?.('preview')};
 const tabTitles={draw:'מעבדת אותיות',document:'מסמך',font:'פונט'};
