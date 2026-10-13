@@ -189,6 +189,25 @@ async function applyHandwrittenMath(out,size,isCurrent=()=>true){
 }
 // Emphasis follows the painted handwriting, not the much shorter native text
 // line box. Both preview and PDF use these same separate line rectangles.
+function extendDocumentEmphasisToMath(root){
+ // Word stores equations separately from the surrounding italic runs. Join
+ // adjacent emphasis and inline equations into one continuous highlight.
+ for(const block of root.querySelectorAll('p,li,th,td,h1,h2,h3,h4,h5,h6')){
+  let run=[];
+  const flush=()=>{
+   if(run.some(node=>node.nodeType===1&&node.tagName==='EM')&&run.some(node=>node.nodeType===1&&node.classList.contains('document-math-inline'))){
+    const em=document.createElement('em');block.insertBefore(em,run[0]);
+    for(const node of run){if(node.nodeType===1&&node.tagName==='EM'){em.append(...node.childNodes);node.remove()}else em.append(node)}
+   }
+   run=[];
+  };
+  for(const node of [...block.childNodes]){
+   const eligible=node.nodeType===3?/^[\s\p{P}]*$/u.test(node.textContent):node.nodeType===1&&(node.tagName==='EM'||node.tagName==='BR'||node.classList.contains('document-math-inline'));
+   if(eligible)run.push(node);else flush();
+  }
+  flush();
+ }
+}
 function documentEmphasisRects(paper){
  const result=[],cache=new WeakMap();
  for(const em of paper.querySelectorAll('em')){
@@ -242,6 +261,7 @@ async function renderMarkdownDocument(out,source,size,{force=false,isCurrent=()=
  if(!isCurrent())return;
  out._parsedSource=source;out._parsedHTML=html;
  template.innerHTML=html;
+ extendDocumentEmphasisToMath(template.content);
  for(const image of template.content.querySelectorAll('img[data-document-image]')){const src=dyoDocumentAssets[image.dataset.documentImage];if(src&&/^data:image\/(png|jpeg|gif|webp);base64,[A-Za-z0-9+/=]+$/i.test(src))image.src=src;else{const warning=document.createElement('span');warning.className='document-image-warning';warning.textContent='[תמונה חסרה — יש לטעון מחדש את המסמך המקורי]';image.replaceWith(warning)}}
  // Match duplicate blocks in order: each keeps its own random letter choices.
  const reusable=new Map();
