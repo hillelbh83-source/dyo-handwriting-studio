@@ -187,10 +187,55 @@ async function applyHandwrittenMath(out,size,isCurrent=()=>true){
   await yieldHandwritingWork();
  }
 }
+// Emphasis follows the painted handwriting, not the much shorter native text
+// line box. Both preview and PDF use these same separate line rectangles.
+function documentEmphasisRects(paper){
+ const result=[],cache=new WeakMap();
+ for(const em of paper.querySelectorAll('em')){
+  if(em.parentElement.closest('em'))continue;
+  const lines=[...em.getClientRects()].filter(r=>r.width&&r.height).map(r=>({left:r.left,right:r.right,top:r.top,bottom:r.bottom,center:(r.top+r.bottom)/2}));
+  for(const element of em.querySelectorAll('.glyph svg,.handwritten-equation,.fallback')){
+   const r=element.getBoundingClientRect();if(!r.width||!r.height||!lines.length)continue;
+   const line=lines.reduce((best,current)=>Math.abs(current.center-(r.top+r.bottom)/2)<Math.abs(best.center-(r.top+r.bottom)/2)?current:best);
+   let bounds=r;
+   if(element.tagName.toLowerCase()==='svg'){
+    const shapes=[...element.querySelectorAll('path,circle,ellipse,line,polyline,polygon,rect,image')].map(shape=>({shape,matrix:shape.getScreenCTM()}));
+    for(const use of element.querySelectorAll('use')){
+     const definition=document.getElementById((use.getAttribute('href')||'').slice(1)),matrix=use.getScreenCTM();
+     for(const shape of definition?.querySelectorAll('path,circle,ellipse,line,polyline,polygon,rect')||[])shapes.push({shape,matrix});
+    }
+    bounds=documentPdfPaintBounds(shapes,cache)||r;
+   }
+   line.left=Math.min(line.left,bounds.left);line.right=Math.max(line.right,bounds.right);
+   line.top=Math.min(line.top,bounds.top);line.bottom=Math.max(line.bottom,bounds.bottom);
+  }
+  for(const line of lines)result.push({left:line.left-3,right:line.right+3,top:line.top-4,bottom:line.bottom+4});
+ }
+ return result;
+}
+function refreshDocumentEmphasis(paper){
+ paper.querySelector(':scope > .document-emphasis-layer')?.remove();
+ if(!paper.isConnected||!paper.clientWidth)return;
+ const rects=documentEmphasisRects(paper);if(!rects.length)return;
+ const box=paper.getBoundingClientRect(),layer=document.createElementNS('http://www.w3.org/2000/svg','svg');
+ layer.classList.add('document-emphasis-layer');layer.setAttribute('aria-hidden','true');
+ layer.setAttribute('width',paper.clientWidth);layer.setAttribute('height',paper.clientHeight);
+ for(const r of rects){
+  const rect=document.createElementNS(layer.namespaceURI,'rect');
+  for(const [key,value] of Object.entries({x:r.left-box.left-paper.clientLeft,y:r.top-box.top-paper.clientTop,width:r.right-r.left,height:r.bottom-r.top,rx:4,fill:'#eaf0e3','fill-opacity':.5}))rect.setAttribute(key,value);
+  layer.append(rect);
+ }
+ paper.append(layer);
+ if(!paper._emphasisObserver){
+  let width=paper.clientWidth;
+  paper._emphasisObserver=new ResizeObserver(()=>{const next=paper.clientWidth;if(next!==width){width=next;if(paper._documentRenderComplete)refreshDocumentEmphasis(paper)}});
+  paper._emphasisObserver.observe(paper);
+ }
+}
 async function renderMarkdownDocument(out,source,size,{force=false,isCurrent=()=>true}={}){
  const styleKey=JSON.stringify([size,rendering.ink,rendering.spacing,$('jitter').value,metrics,libraryRevision,dyoDocumentAssetRevision]);
  const sameStyle=out._documentStyleKey===styleKey&&out._documentLibrary===data;
- if(!force&&sameStyle&&out._documentRenderComplete!==false&&out._documentSource===source){out.dataset.mathReady='true';$('docState').textContent='התצוגה מעודכנת';return}
+ if(!force&&sameStyle&&out._documentRenderComplete!==false&&out._documentSource===source){refreshDocumentEmphasis(out);out.dataset.mathReady='true';$('docState').textContent='התצוגה מעודכנת';return}
  out._documentRenderComplete=false;
  const template=document.createElement('template');
  const html=out._parsedSource===source?out._parsedHTML:await parseDocumentMarkdown(source);
@@ -270,6 +315,7 @@ async function renderMarkdownDocument(out,source,size,{force=false,isCurrent=()=
  await Promise.all([...out.querySelectorAll('img.document-image')].map(image=>image.decode()));
  if(!isCurrent())return;
  out._documentRenderComplete=true;
+ refreshDocumentEmphasis(out);
  out.dataset.mathReady='true';$('docState').textContent='התצוגה מעודכנת';
  pruneHandwritingDefinitions(out);
 }

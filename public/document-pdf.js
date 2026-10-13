@@ -106,8 +106,9 @@ async function snapshotDocumentVectors(paper){
   // Embed the original image bytes; never resolve a remote URL during export.
   node.setAttribute('href',image.currentSrc||image.src);add(node,r,true);await breathe();
  }
+ for(const r of documentEmphasisRects(paper))add(pdfSvgElement('rect',{x:r.left-box.left,y:r.top-box.top,width:r.right-r.left,height:r.bottom-r.top,rx:4,fill:'#eaf0e3','fill-opacity':.5}),r,true);
  for(const svg of paper.querySelectorAll('svg')){
-  if(svg.closest('.handwriting-math-layout')||svg.parentElement.closest('svg'))continue;
+  if(svg.classList.contains('document-emphasis-layer')||svg.closest('.handwriting-math-layout')||svg.parentElement.closest('svg'))continue;
   const r=svg.getBoundingClientRect();
   if(!r.width||!r.height)continue;
   const group=pdfSvgElement('g');

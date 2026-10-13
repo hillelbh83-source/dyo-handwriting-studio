@@ -212,7 +212,9 @@ button,a,input,select,textarea{touch-action:manipulation}
 #docPaper li{padding-inline-start:.25em;margin:.7em 0;line-height:2}
 #docPaper li::marker{color:#657955;font-size:.75em;font-variant-numeric:tabular-nums}
 #docPaper li>p{margin:.5em 0}#docPaper li>p:first-child{margin-top:0}
-#docPaper em{font-style:normal;background:#eaf0e340;border-radius:3px}
+#docPaper{position:relative;isolation:isolate}
+#docPaper em{font-style:normal;background:none}
+#docPaper .document-emphasis-layer{position:absolute;inset:0;overflow:visible;pointer-events:none;z-index:-1}
 #docPaper blockquote{margin:1em 0;padding:.4em 1em;border-inline-start:3px solid #b8c9a7;background:#edf2e540}
 #docPaper code{font: .65em/1.7 monospace;direction:ltr;unicode-bidi:isolate;background:#eef2e8;padding:.15em .35em;border-radius:5px}
 #docPaper pre{direction:ltr;text-align:left;overflow:auto;padding:16px;background:#eef2e8;border-radius:10px;line-height:1.6}
